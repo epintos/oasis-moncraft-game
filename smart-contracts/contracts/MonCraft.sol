@@ -35,16 +35,16 @@ contract MonCraft is IERC721Receiver {
     }
 
     /// STATE VARIABLES
-    uint256 public MAX_ASSETS = 10;
-    uint256 public PROBABILITY_APPEARANCE = 20;
-
     uint256 private s_seed;
-    MonsterNFT public s_monsterNFT;
-    MonsterNFT.Monster[] public s_monsters;
-    mapping(bytes32 code => Session session) public s_codeSessions;
+
+    uint256 public s_maxAssets = 10;
+    uint256 public s_probabilityAppearence = 20;
     address public s_roflAddress;
     uint256 public s_sessionsQty;
     address private s_owner;
+    MonsterNFT public s_monsterNFT;
+    MonsterNFT.Monster[] public s_monsters;
+    mapping(bytes32 code => Session session) public s_codeSessions;
 
     /// EVENTS
     event NewSession(bytes32 indexed sessionCode);
@@ -150,7 +150,7 @@ contract MonCraft is IERC721Receiver {
 
         MonsterNFT.Monster memory monster = s_monsters[monsterIndex];
 
-        if (session.monstersTokenIds.length == MAX_ASSETS) {
+        if (session.monstersTokenIds.length == s_maxAssets) {
             revert MonCraft__AlreadyMaxMonsters();
         }
 
@@ -233,7 +233,7 @@ contract MonCraft is IERC721Receiver {
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
         }
-        if (session.monstersTokenIds.length + tokenIds.length > MAX_ASSETS) {
+        if (session.monstersTokenIds.length + tokenIds.length > s_maxAssets) {
             revert MonCraft__AlreadyMaxMonsters();
         }
         for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -251,11 +251,11 @@ contract MonCraft is IERC721Receiver {
     }
 
     function updateProbabilityAppearance(uint256 newProbability) external onlyOwner {
-        PROBABILITY_APPEARANCE = newProbability;
+        s_probabilityAppearence = newProbability;
     }
 
     function updateMaxAssets(uint256 newMaxAssets) external onlyOwner {
-        MAX_ASSETS = newMaxAssets;
+        s_maxAssets = newMaxAssets;
     }
 
     function updateROFLAddress(address newROFLAddress) external onlyOwner {
@@ -268,7 +268,6 @@ contract MonCraft is IERC721Receiver {
     }
 
     // PUBLIC & EXTERNAL VIEW FUNCTIONS
-    // increases move in ROFL
     function checkStep(bytes32 sessionCode, uint256 playerStep) external view returns (uint256, bool) {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
@@ -281,7 +280,7 @@ contract MonCraft is IERC721Receiver {
         uint256 percentageAppearance = uint256(hashAppearance) % 100;
         uint256 percentageMonster = uint256(hashMonster) % 100;
 
-        if (percentageAppearance <= PROBABILITY_APPEARANCE) {
+        if (percentageAppearance <= s_probabilityAppearence) {
             for (uint256 i = 0; i < s_monsters.length; i++) {
                 if (percentageMonster < s_monsters[i].chancesOfApperance) {
                     return (i, true);

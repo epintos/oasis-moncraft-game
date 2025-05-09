@@ -1,593 +1,599 @@
 [
-    {
-      "inputs": [
-        {
-          "internalType": "string[]",
-          "name": "names",
-          "type": "string[]"
-        },
-        {
-          "internalType": "string[]",
-          "name": "imageURIs",
-          "type": "string[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "initialHPs",
-          "type": "uint256[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "attackDamages",
-          "type": "uint256[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "defenses",
-          "type": "uint256[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "chancesOfAppearance",
-          "type": "uint256[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "chancesOfCapture",
-          "type": "uint256[]"
-        },
-        {
-          "internalType": "address",
-          "name": "roflAddress",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
-    {
-      "inputs": [],
-      "name": "MonCraft__AlreadyMaxMonsters",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "MonCraft__CurrentStepIsLower",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "MonCraft__InvalidMonstersLength",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "MonCraft__InvalidSessionCode",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "MonCraft__MonsterDoesNotExist",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "MonCraft__NotOwner",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "MonCraft__NotROLFAddress",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "MonCraft__ReceiverIsNotCurrentContract",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "MonCraft__SessionDoesNotExist",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "MonCraft__SessionDoesNotHaveTokenId",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "MonCraft__TransferFailed",
-      "type": "error"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "MonsterCaptured",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "MonsterReleased",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "newHP",
-          "type": "uint256"
-        }
-      ],
-      "name": "MonsterUpdated",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "player",
-          "type": "address"
-        }
-      ],
-      "name": "MonstersImported",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "player",
-          "type": "address"
-        }
-      ],
-      "name": "MonstersWithdrawn",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        }
-      ],
-      "name": "NewSession",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "currentStep",
-          "type": "uint256"
-        }
-      ],
-      "name": "StepsSynced",
-      "type": "event"
-    },
-    {
-      "inputs": [],
-      "name": "MAX_ASSETS",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "PROBABILITY_APPEARANCE",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint256",
-          "name": "monsterIndex",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "currentStep",
-          "type": "uint256"
-        }
-      ],
-      "name": "captureMonster",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint256",
-          "name": "playerStep",
-          "type": "uint256"
-        }
-      ],
-      "name": "checkStep",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "tokenIds",
-          "type": "uint256[]"
-        }
-      ],
-      "name": "importMonsters",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "operator",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        }
-      ],
-      "name": "onERC721Received",
-      "outputs": [
-        {
-          "internalType": "bytes4",
-          "name": "",
-          "type": "bytes4"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "releaseMonster",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "code",
-          "type": "bytes32"
-        }
-      ],
-      "name": "s_codeSessions",
-      "outputs": [
-        {
-          "internalType": "enum MonCraft.Status",
-          "name": "status",
-          "type": "uint8"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "code",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint256",
-          "name": "currentStep",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "s_monsterNFT",
-      "outputs": [
-        {
-          "internalType": "contract MonsterNFT",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "s_monsters",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "name",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "imageURI",
-          "type": "string"
-        },
-        {
-          "internalType": "uint256",
-          "name": "initialHP",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "currentHP",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "attackDamage",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "defense",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "chancesOfApperance",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "chancesOfCapture",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "s_roflAddress",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "s_sessionsQty",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "startGame",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint256",
-          "name": "currentStep",
-          "type": "uint256"
-        }
-      ],
-      "name": "syncCurrentStep",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "newMaxAssets",
-          "type": "uint256"
-        }
-      ],
-      "name": "updateMaxAssets",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "newProbability",
-          "type": "uint256"
-        }
-      ],
-      "name": "updateProbabilityAppearance",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "newROFLAddress",
-          "type": "address"
-        }
-      ],
-      "name": "updateROFLAddress",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "sessionCode",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "player",
-          "type": "address"
-        }
-      ],
-      "name": "withdrawMonsters",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    }
-  ]
+  {
+    "inputs": [
+      {
+        "internalType": "string[]",
+        "name": "names",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "imageURIs",
+        "type": "string[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "initialHPs",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "attackDamages",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "defenses",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "chancesOfAppearance",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "chancesOfCapture",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "address",
+        "name": "roflAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "MonCraft__AlreadyMaxMonsters",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MonCraft__CurrentStepIsLower",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MonCraft__InvalidMonstersLength",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MonCraft__InvalidSessionCode",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MonCraft__MonsterDoesNotExist",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MonCraft__NotOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MonCraft__NotROLFAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MonCraft__ReceiverIsNotCurrentContract",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MonCraft__SessionDoesNotExist",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MonCraft__SessionDoesNotHaveTokenId",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MonCraft__TransferFailed",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "captured",
+        "type": "bool"
+      }
+    ],
+    "name": "MonsterCaptured",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "MonsterReleased",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newHP",
+        "type": "uint256"
+      }
+    ],
+    "name": "MonsterUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "player",
+        "type": "address"
+      }
+    ],
+    "name": "MonstersImported",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "player",
+        "type": "address"
+      }
+    ],
+    "name": "MonstersWithdrawn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      }
+    ],
+    "name": "NewSession",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "currentStep",
+        "type": "uint256"
+      }
+    ],
+    "name": "StepsSynced",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "monsterIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentStep",
+        "type": "uint256"
+      }
+    ],
+    "name": "captureMonster",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "playerStep",
+        "type": "uint256"
+      }
+    ],
+    "name": "checkStep",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "tokenIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "importMonsters",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "name": "onERC721Received",
+    "outputs": [
+      {
+        "internalType": "bytes4",
+        "name": "",
+        "type": "bytes4"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "releaseMonster",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "code",
+        "type": "bytes32"
+      }
+    ],
+    "name": "s_codeSessions",
+    "outputs": [
+      {
+        "internalType": "enum MonCraft.Status",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "code",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentStep",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "s_maxAssets",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "s_monsterNFT",
+    "outputs": [
+      {
+        "internalType": "contract MonsterNFT",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "s_monsters",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "imageURI",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "initialHP",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentHP",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "attackDamage",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "defense",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chancesOfApperance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chancesOfCapture",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "s_probabilityAppearence",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "s_roflAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "s_sessionsQty",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "startGame",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentStep",
+        "type": "uint256"
+      }
+    ],
+    "name": "syncCurrentStep",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newMaxAssets",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateMaxAssets",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newProbability",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateProbabilityAppearance",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newROFLAddress",
+        "type": "address"
+      }
+    ],
+    "name": "updateROFLAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "player",
+        "type": "address"
+      }
+    ],
+    "name": "withdrawMonsters",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
