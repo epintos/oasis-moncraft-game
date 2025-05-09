@@ -7,32 +7,23 @@ import "./tasks";
 // Load environment variables from .env file
 dotenv.config();
 
-const accounts = process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : {
-  mnemonic: "test test test test test test test test test test test junk",
-  path: "m/44'/60'/0'/0",
-  initialIndex: 0,
-  count: 20,
-  passphrase: "",
-};
-
 const config: HardhatUserConfig = {
   solidity: "0.8.28",
   networks: {
     sapphire: {
       url: "https://sapphire.oasis.io",
       chainId: 0x5afe,
-      accounts,
+      accounts: [process.env.PRIVATE_KEY as string],
     },
     "sapphire-testnet": {
       url: "https://testnet.sapphire.oasis.io",
-      accounts,
+      accounts: [process.env.TESTNET_PRIVATE_KEY as string],
       chainId: 0x5aff,
     },
     "sapphire-localnet": {
-      // docker run -it -p8544-8548:8544-8548 ghcr.io/oasisprotocol/sapphire-localnet
       url: "http://localhost:9001",
       chainId: 0x5afd,
-      accounts,
+      accounts: [process.env.LOCAL_PRIVATE_KEY as string],
     },
   },
 };

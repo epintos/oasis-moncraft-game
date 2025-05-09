@@ -1,6 +1,10 @@
+import dotenv from "dotenv";
 import { task } from "hardhat/config";
+dotenv.config();
 
 task("deploy").setAction(async (_args, hre) => {
+  const [deployer] = await hre.ethers.getSigners();
+  const deployerAddress = deployer.address;
   const names = [
     "TALODION",
     "SATYROSK",
@@ -33,6 +37,15 @@ task("deploy").setAction(async (_args, hre) => {
   const chancesOfAppearance = [30, 50, 61, 71, 79, 86, 92, 96, 99, 100];
   const chancesOfCapture = [80, 15, 70, 65, 30, 55, 40, 30, 20, 30];
 
+  let roflSignerAddress;
+  if (hre.network.name === "sapphire-localnet") {
+    roflSignerAddress = process.env.LOCAL_ROFL_SIGNER_ADDRESS;
+  } else if (hre.network.name === "sapphire-testnet") {
+    roflSignerAddress = process.env.TESTNET_ROFL_SIGNER_ADDRESS;
+  } else {
+    roflSignerAddress = process.env.ROFL_SIGNER_ADDRESS;
+  }
+
   const MonCraft = await hre.ethers.getContractFactory("MonCraft");
   const monCraft = await MonCraft.deploy(
     names,
@@ -42,8 +55,8 @@ task("deploy").setAction(async (_args, hre) => {
     defenses,
     chancesOfAppearance,
     chancesOfCapture,
-    "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-    "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+    roflSignerAddress,
+    deployerAddress
   );
   const monCraftAddr = await monCraft.waitForDeployment();
 
