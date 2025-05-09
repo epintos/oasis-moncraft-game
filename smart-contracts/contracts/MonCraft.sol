@@ -201,7 +201,7 @@ contract MonCraft is IERC721Receiver {
         return this.onERC721Received.selector;
     }
 
-    function withdrawMonsters(bytes32 sessionCode, address player) external onlyROFL {
+    function withdrawMonsters(bytes32 sessionCode, address player) external {
         Session storage session = s_codeSessions[sessionCode];
 
         // Check if session exists and is in progress
@@ -226,7 +226,7 @@ contract MonCraft is IERC721Receiver {
         emit MonstersWithdrawn(sessionCode, player);
     }
 
-    function importMonsters(bytes32 sessionCode, uint256[] memory tokenIds) external onlyROFL {
+    function importMonsters(bytes32 sessionCode, uint256[] memory tokenIds) external {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
