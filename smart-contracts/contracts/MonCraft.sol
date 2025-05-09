@@ -228,7 +228,7 @@ contract MonCraft is IERC721Receiver {
 
     // PUBLIC & EXTERNAL VIEW FUNCTIONS
     // increases move in ROFL
-    function checkStep(bytes32 sessionCode, uint256 playerStep) external view onlyROFL returns (uint256, bool) {
+    function checkStep(bytes32 sessionCode, uint256 playerStep) external view returns (uint256, bool) {
         Session memory session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
