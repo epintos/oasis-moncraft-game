@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blockchain Game Client</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Blockchain Game Client</h1>
+  <div>
+    <label for="toAddress">Recipient Address:</label>
+    <input type="text" id="toAddress" placeholder="0x..." />
+  </div>
+  <div>
+    <label for="amount">Amount (ETH):</label>
+    <input type="text" id="amount" placeholder="0.01" />
+  </div>
+  <button onclick="sendTransaction()">Send Transaction</button>
+  <h3>Response:</h3>
+  <pre id="output">Connecting...</pre>
+  <script src="app.js"></script>
+</body>
+</html>

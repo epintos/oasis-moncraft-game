@@ -1,0 +1,45 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 0 20px;
+  }
+  
+  h1 {
+    text-align: center;
+  }
+  
+  div {
+    margin: 10px 0;
+  }
+  
+  label {
+    display: inline-block;
+    width: 120px;
+  }
+  
+  input {
+    width: 300px;
+    padding: 5px;
+  }
+  
+  button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
+  pre#output {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    min-height: 100px;
+  }
