@@ -159,7 +159,7 @@ contract MonCraft is IERC721Receiver {
         uint256 percentage =
             uint256(keccak256(abi.encodePacked(s_seed, session.code, currentStep, monsterIndex, block.timestamp))) % 100;
 
-        if (percentage >= monster.chancesOfCapture) {
+        if (percentage <= monster.chancesOfCapture) {
             uint256 tokenId = s_monsterNFT.mint(address(this), monster);
             session.monstersTokenIds.push(tokenId);
             session.monsterTokenIdsExists[tokenId] = true;
