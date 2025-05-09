@@ -125,7 +125,7 @@ contract MonCraft is IERC721Receiver {
     }
 
     // used by ROFL to sync steps when users saves or timeouts
-    function syncSteps(bytes32 sessionCode, uint256 currentStep) external onlyROFL {
+    function syncCurrentStep(bytes32 sessionCode, uint256 currentStep) external onlyROFL {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
@@ -137,7 +137,7 @@ contract MonCraft is IERC721Receiver {
         emit StepsSynced(sessionCode, currentStep);
     }
 
-    function captureMonster(bytes32 sessionCode, uint256 monsterIndex) external onlyROFL {
+    function captureMonster(bytes32 sessionCode, uint256 monsterIndex, uint256 currentStep) external onlyROFL {
         if (monsterIndex >= s_monsters.length) {
             revert MonCraft__MonsterDoesNotExist();
         }
@@ -152,12 +152,14 @@ contract MonCraft is IERC721Receiver {
             revert MonCraft__AlreadyMaxMonsters();
         }
 
-        uint256 percentage = uint256(keccak256(abi.encodePacked(s_seed, session.code, block.timestamp))) % 100;
+        session.currentStep = currentStep;
+
+        uint256 percentage =
+            uint256(keccak256(abi.encodePacked(s_seed, session.code, currentStep, monsterIndex, block.timestamp))) % 100;
 
         if (percentage >= monster.chancesOfCapture) {
             uint256 tokenId = s_monsterNFT.mint(address(this), monster);
             session.monstersTokenIds.push(tokenId);
-            // session.currentStep++;
             emit MonsterCaptured(sessionCode, monsterIndex);
         }
     }
