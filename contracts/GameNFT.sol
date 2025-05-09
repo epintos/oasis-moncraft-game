@@ -6,7 +6,6 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-// import {GameAsset} from "./GameAsset.sol";
 
 contract GameNFT is ERC721, Ownable {
     using Strings for uint256;
@@ -18,7 +17,8 @@ contract GameNFT is ERC721, Ownable {
         uint256 currentHP;
         uint256 attackDamage;
         uint256 defense;
-        uint256 percentageOfApperance;
+        uint256 chancesOfApperance;
+        uint256 chancesOfCapture;
     }
 
     uint256 private s_totalSupply;
@@ -28,7 +28,8 @@ contract GameNFT is ERC721, Ownable {
 
     constructor() ERC721("GameNFT", "GNFT") Ownable(msg.sender) {}
 
-    function mint(address to) external onlyOwner {
+    function mint(address to, Asset memory asset) external onlyOwner {
+        s_assets[s_totalSupply] = asset;
         _safeMint(to, s_totalSupply);
         s_totalSupply++;
     }
