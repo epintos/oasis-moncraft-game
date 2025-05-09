@@ -169,7 +169,7 @@ contract MonCraft is IERC721Receiver {
         emit MonsterCaptured(sessionCode, monsterIndex, captured);
     }
 
-    function releaseMonster(bytes32 sessionCode, uint256 tokenId) external {
+    function releaseMonster(bytes32 sessionCode, uint256 tokenId) external onlyROFL {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
