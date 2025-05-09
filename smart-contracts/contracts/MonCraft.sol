@@ -48,7 +48,7 @@ contract MonCraft is IERC721Receiver {
 
     /// EVENTS
     event NewSession(bytes32 indexed sessionCode);
-    event MonsterCaptured(bytes32 indexed sessionCode, uint256 tokenId);
+    event MonsterCaptured(bytes32 indexed sessionCode, uint256 tokenId, bool captured);
     event StepsSynced(bytes32 indexed sessionCode, uint256 currentStep);
     event MonsterUpdated(bytes32 indexed sessionCode, uint256 newHP);
     event MonsterReleased(bytes32 indexed sessionCode, uint256 tokenId);
@@ -159,12 +159,14 @@ contract MonCraft is IERC721Receiver {
         uint256 percentage =
             uint256(keccak256(abi.encodePacked(s_seed, session.code, currentStep, monsterIndex, block.timestamp))) % 100;
 
+        bool captured;
         if (percentage <= monster.chancesOfCapture) {
             uint256 tokenId = s_monsterNFT.mint(address(this), monster);
             session.monstersTokenIds.push(tokenId);
             session.monsterTokenIdsExists[tokenId] = true;
-            emit MonsterCaptured(sessionCode, monsterIndex);
+            captured = true;
         }
+        emit MonsterCaptured(sessionCode, monsterIndex, captured);
     }
 
     function releaseMonster(bytes32 sessionCode, uint256 tokenId) external {
