@@ -6,6 +6,10 @@ import {Sapphire} from "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol
 import {MonsterNFT} from "./MonsterNFT.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
+/**
+ * @title MonCraft
+ * @author @epintos, @federava
+ */
 contract MonCraft is IERC721Receiver {
     /// ERRORS
     error MonCraft__InvalidMonstersLength();
@@ -37,7 +41,7 @@ contract MonCraft is IERC721Receiver {
     /// STATE VARIABLES
     uint256 private s_seed;
 
-    uint256 public s_maxAssets = 10;
+    uint256 public s_maxMonsters = 10;
     uint256 public s_probabilityAppearence = 20;
     address public s_roflAddress;
     uint256 public s_sessionsQty;
@@ -72,14 +76,26 @@ contract MonCraft is IERC721Receiver {
     /// FUNCTIONS
 
     // CONSTRUCTOR
+    /**
+     *
+     * @param names The names of the monsters.
+     * @param imageURIs The IPFS URIs of the monster images.
+     * @param initialHPs The initial HP values for the monsters.
+     * @param attackDamages The attack damage values for the monsters.
+     * @param defenses The defense values for the monsters.
+     * @param chancesOfAppearance Cumulative % chances of monster appearance.
+     * @param chancesOfCapture % chances of capturing the monster once found.
+     * @param roflAddress The address of the ROFL contract authorized to control gameplay.
+     * @param owner The address of the contract owner.
+     */
     constructor(
         string[] memory names,
         string[] memory imageURIs,
         uint256[] memory initialHPs,
         uint256[] memory attackDamages,
         uint256[] memory defenses,
-        uint256[] memory chancesOfAppearance, // ordered by appearence DESC
-        uint256[] memory chancesOfCapture, // ordered by appearence DESC
+        uint256[] memory chancesOfAppearance,
+        uint256[] memory chancesOfCapture,
         address roflAddress,
         address owner
     ) {
@@ -113,6 +129,11 @@ contract MonCraft is IERC721Receiver {
     }
 
     // EXTERNAL FUNCTIONS
+
+    /**
+     * @notice Allows the ROLF to start a new game
+     * @notice The session mints the monster with index 0
+     */
     function startGame() external onlyROFL returns (bytes32 sessionCode) {
         sessionCode = _generateCode();
         Session storage session = s_codeSessions[sessionCode];
@@ -126,7 +147,11 @@ contract MonCraft is IERC721Receiver {
         emit NewSession(sessionCode);
     }
 
-    // used by ROFL to sync steps when users saves or timeouts
+    /**
+     * @notice Allows the ROFL to update the session current steps
+     * @param sessionCode The session identifier.
+     * @param currentStep The new current step to sync.
+     */
     function syncCurrentStep(bytes32 sessionCode, uint256 currentStep) external onlyROFL {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
@@ -139,6 +164,12 @@ contract MonCraft is IERC721Receiver {
         emit StepsSynced(sessionCode, currentStep);
     }
 
+    /**
+     * @notice Attempts to capture a monster at a given step based on a random probability.
+     * @param sessionCode The session identifier.
+     * @param monsterIndex monster that appears and the player can capture
+     * @param currentStep The current player's step
+     */
     function captureMonster(bytes32 sessionCode, uint256 monsterIndex, uint256 currentStep) external onlyROFL {
         if (monsterIndex >= s_monsters.length) {
             revert MonCraft__MonsterDoesNotExist();
@@ -150,7 +181,7 @@ contract MonCraft is IERC721Receiver {
 
         MonsterNFT.Monster memory monster = s_monsters[monsterIndex];
 
-        if (session.monstersTokenIds.length == s_maxAssets) {
+        if (session.monstersTokenIds.length == s_maxMonsters) {
             revert MonCraft__AlreadyMaxMonsters();
         }
 
@@ -169,6 +200,14 @@ contract MonCraft is IERC721Receiver {
         emit MonsterCaptured(sessionCode, monsterIndex, captured);
     }
 
+    /**
+     *
+     * @notice Releases a captured monster and burns the NFT.
+     * @param sessionCode The session identifier.
+     * @param tokenId The NFT token ID to release.
+     * @notice This method is used when the user reaches the maxMonsters and wants to release a monster
+     * to capture a new one
+     */
     function releaseMonster(bytes32 sessionCode, uint256 tokenId) external onlyROFL {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
@@ -203,6 +242,13 @@ contract MonCraft is IERC721Receiver {
         return this.onERC721Received.selector;
     }
 
+    /**
+     *
+     * @notice Withdraws all captured monsters from a session and transfers them to a player.
+     * @param sessionCode The session identifier.
+     * @param player The address receiving the monsters.
+     * @dev Removes the monsters from the session
+     */
     function withdrawMonsters(bytes32 sessionCode, address player) external {
         Session storage session = s_codeSessions[sessionCode];
 
@@ -228,12 +274,20 @@ contract MonCraft is IERC721Receiver {
         emit MonstersWithdrawn(sessionCode, player);
     }
 
+    /**
+     *
+     * @notice Imports existing monster NFTs into an active session.
+     * @param sessionCode The session identifier.
+     * @param tokenIds The array of token IDs to import.
+     * @dev Ignores any existing tokenIds
+     * @dev Transfers the NFT from the owner to this contract
+     */
     function importMonsters(bytes32 sessionCode, uint256[] memory tokenIds) external {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
         }
-        if (session.monstersTokenIds.length + tokenIds.length > s_maxAssets) {
+        if (session.monstersTokenIds.length + tokenIds.length > s_maxMonsters) {
             revert MonCraft__AlreadyMaxMonsters();
         }
         for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -250,24 +304,49 @@ contract MonCraft is IERC721Receiver {
         emit MonstersImported(sessionCode, msg.sender);
     }
 
+    /**
+     * @notice Updates the probability of a monster appearing
+     * @param newProbability new probability
+     */
     function updateProbabilityAppearance(uint256 newProbability) external onlyOwner {
         s_probabilityAppearence = newProbability;
     }
 
-    function updateMaxAssets(uint256 newMaxAssets) external onlyOwner {
-        s_maxAssets = newMaxAssets;
+    /**
+     * @notice Updates the maxMonsters a sesssion can hold
+     * @param newMaxMonsters new max monsters
+     */
+    function updateMaxMonsters(uint256 newMaxMonsters) external onlyOwner {
+        s_maxMonsters = newMaxMonsters;
     }
 
+    /**
+     * @notice Updates the ROFL address
+     * @param newROFLAddress The new ROFL address.
+     */
     function updateROFLAddress(address newROFLAddress) external onlyOwner {
         s_roflAddress = newROFLAddress;
     }
 
     // PRIVATE & INTERNAL VIEW FUNCTIONS
+
+    /**
+     * @notice Generates a random session code for the game session
+     * @return generated code
+     */
     function _generateCode() private view returns (bytes32) {
         return keccak256(abi.encodePacked(s_seed, s_sessionsQty, block.timestamp));
     }
 
     // PUBLIC & EXTERNAL VIEW FUNCTIONS
+
+    /**
+     * @notice Computes if a random monster appears at a given step.
+     * @param sessionCode The session identifier.
+     * @param playerStep The player's current step.
+     * @return monsterIndex The index of the monster tha appears.
+     * @return appeared Whether a monster appears at this step.
+     */
     function checkStep(bytes32 sessionCode, uint256 playerStep) external view returns (uint256, bool) {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {

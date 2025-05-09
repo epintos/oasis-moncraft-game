@@ -391,7 +391,7 @@
   },
   {
     "inputs": [],
-    "name": "s_maxAssets",
+    "name": "s_maxMonsters",
     "outputs": [
       {
         "internalType": "uint256",
@@ -543,11 +543,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "newMaxAssets",
+        "name": "newMaxMonsters",
         "type": "uint256"
       }
     ],
-    "name": "updateMaxAssets",
+    "name": "updateMaxMonsters",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
