@@ -5,8 +5,9 @@ pragma solidity ^0.8.28;
 import {Sapphire} from "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
 import {MonsterNFT} from "./MonsterNFT.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MonCraft is IERC721Receiver {
+contract MonCraft is IERC721Receiver, Ownable {
     /// ERRORS
     error MonCraft__InvalidMonstersLength();
     error MonCraft__AlreadyMaxMonsters();
@@ -33,11 +34,13 @@ contract MonCraft is IERC721Receiver {
     }
 
     /// STATE VARIABLES
+    uint256 public MAX_ASSETS = 10;
+    uint256 public PROBABILITY_APPEARANCE = 20;
+
     uint256 private s_seed;
     MonsterNFT public s_monsterNFT;
     MonsterNFT.Monster[] public s_monsters;
     mapping(bytes32 code => Session session) public s_codeSessions;
-    uint256 public constant MAX_ASSETS = 10;
     address public s_roflAddress;
     uint256 public s_sessionsQty;
 
@@ -70,7 +73,7 @@ contract MonCraft is IERC721Receiver {
         uint256[] memory chancesOfAppearance, // ordered by appearence DESC
         uint256[] memory chancesOfCapture, // ordered by appearence DESC
         address roflAddress
-    ) {
+    ) Ownable(msg.sender) {
         if (
             names.length != imageURIs.length || names.length != initialHPs.length
                 || names.length != attackDamages.length || names.length != defenses.length
@@ -221,6 +224,18 @@ contract MonCraft is IERC721Receiver {
         emit MonstersImported(sessionCode, msg.sender);
     }
 
+    function updateProbabilityAppearance(uint256 newProbability) external onlyOwner {
+        PROBABILITY_APPEARANCE = newProbability;
+    }
+
+    function updateMaxAssets(uint256 newMaxAssets) external onlyOwner {
+        MAX_ASSETS = newMaxAssets;
+    }
+
+    function updateROFLAddress(address newROFLAddress) external onlyOwner {
+        s_roflAddress = newROFLAddress;
+    }
+
     // PRIVATE & INTERNAL VIEW FUNCTIONS
     function _generateCode() private view returns (bytes32) {
         return keccak256(abi.encodePacked(s_seed, s_sessionsQty, block.timestamp));
@@ -234,17 +249,13 @@ contract MonCraft is IERC721Receiver {
             revert MonCraft__SessionDoesNotExist();
         }
 
-        bytes32 hashAppearance =
-            keccak256(abi.encodePacked(s_seed, sessionCode, playerStep, block.timestamp));
-        bytes32 hashMonster =
-            keccak256(abi.encode(hashAppearance));
+        bytes32 hashAppearance = keccak256(abi.encodePacked(s_seed, sessionCode, playerStep, block.timestamp));
+        bytes32 hashMonster = keccak256(abi.encode(hashAppearance));
 
-        uint256 percentageAppearance =
-            uint256(hashAppearance) % 100;
-        uint256 percentageMonster =
-            uint256(hashMonster) % 100;
+        uint256 percentageAppearance = uint256(hashAppearance) % 100;
+        uint256 percentageMonster = uint256(hashMonster) % 100;
 
-        if (percentageAppearance >= 20) {
+        if (percentageAppearance >= PROBABILITY_APPEARANCE) {
             for (uint256 i = 0; i < s_monsters.length; i++) {
                 if (percentageMonster < s_monsters[i].chancesOfApperance) {
                     return (i, true);
