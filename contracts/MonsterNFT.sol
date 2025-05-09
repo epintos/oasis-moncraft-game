@@ -7,10 +7,10 @@ import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
-contract GameNFT is ERC721, Ownable {
+contract MonsterNFT is ERC721, Ownable {
     using Strings for uint256;
 
-    struct Asset {
+    struct Monster {
         string name;
         string imageURI;
         uint256 initialHP;
@@ -22,15 +22,15 @@ contract GameNFT is ERC721, Ownable {
     }
 
     uint256 private s_totalSupply;
-    mapping(uint256 => Asset) private s_assets;
+    mapping(uint256 => Monster) private s_monsters;
 
     event HPUpdated(uint256 indexed tokenId, uint256 newHP);
 
     constructor() ERC721("GameNFT", "GNFT") Ownable(msg.sender) {}
 
-    function mint(address to, Asset memory asset) external onlyOwner returns (uint256) {
+    function mint(address to, Monster memory monster) external onlyOwner returns (uint256) {
         uint256 tokenId = s_totalSupply;
-        s_assets[tokenId] = asset;
+        s_monsters[tokenId] = monster;
         _safeMint(to, tokenId);
         s_totalSupply++;
         return tokenId;
@@ -41,31 +41,31 @@ contract GameNFT is ERC721, Ownable {
     }
 
     function updateHP(uint256 tokenId, uint256 newHP) external onlyOwner {
-        s_assets[tokenId].currentHP = newHP;
+        s_monsters[tokenId].currentHP = newHP;
         emit HPUpdated(tokenId, newHP);
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        Asset memory asset = s_assets[tokenId];
+        Monster memory monster = s_monsters[tokenId];
 
         string memory json = string(
             abi.encodePacked(
                 '{"name":"',
-                asset.name,
+                monster.name,
                 '"image":"',
-                asset.imageURI,
+                monster.imageURI,
                 '","attributes":[',
                 '{"trait_type":"Initial HP","value":',
-                asset.initialHP.toString(),
+                monster.initialHP.toString(),
                 "},",
                 '{"trait_type":"Current HP","value":',
-                asset.currentHP.toString(),
+                monster.currentHP.toString(),
                 "},",
                 '{"trait_type":"Attack Damage","value":',
-                asset.attackDamage.toString(),
+                monster.attackDamage.toString(),
                 "},",
                 '{"trait_type":"Defense","value":',
-                asset.defense.toString(),
+                monster.defense.toString(),
                 "}",
                 "]}"
             )
