@@ -4,13 +4,15 @@ pragma solidity ^0.8.28;
 
 import {Sapphire} from "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
 import {MonsterNFT} from "./MonsterNFT.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract MonCraft {
+contract MonCraft is IERC721Receiver {
     /// ERRORS
     error MonCraft__InvalidMonstersLength();
     error MonCraft__AlreadyMaxMonsters();
     error MonCraft__SessionDoesNotExist();
     error MonCraft__NotROLFAddress();
+    error MonCraft__ReceiverIsNotCurrentContract();
 
     enum Status {
         ABSENT,
@@ -151,7 +153,22 @@ contract MonCraft {
         emit MonsterReleased(sessionCode, tokenId);
     }
 
+    /**
+     *
+     * @inheritdoc IERC721Receiver
+     */
+    function onERC721Received(address operator, address, /* from */ uint256, /* tokenId */ bytes calldata /* data */ )
+        external
+        view
+        returns (bytes4)
+    {
+        if (operator != address(this)) {
+            revert MonCraft__ReceiverIsNotCurrentContract();
+        }
+        return this.onERC721Received.selector;
+    }
     // PRIVATE & INTERNAL VIEW FUNCTIONS
+
     function _generateCode() private view returns (string memory) {
         bytes32 hash = keccak256(abi.encodePacked(s_seed, block.timestamp));
         bytes memory alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

@@ -1,4 +1,3 @@
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { Contract } from "ethers";
@@ -7,16 +6,16 @@ import { ethers } from "hardhat";
 describe("MonCraft", function () {
   let monCraft: Contract;
   let monsterNFT: Contract;
-  let owner: SignerWithAddress;
-  let roflAddress: SignerWithAddress;
-  let user: SignerWithAddress;
+  let owner: any;
+  let roflAddress: any;
+  let user: any;
 
   // Sample monster data for testing
-  const monsterNames = ["Pikachu", "Bulbasaur", "Charmander"];
+  const monsterNames = ["Mon1", "Mon2", "Mon3"];
   const monsterImageURIs = [
-    "https://example.com/pikachu.png",
-    "https://example.com/bulbasaur.png",
-    "https://example.com/charmander.png"
+    "https://example.com/Mon1.png",
+    "https://example.com/Mon2.png",
+    "https://example.com/Mon3.png"
   ];
   const initialHPs = [100, 120, 80];
   const attackDamages = [25, 20, 30];
@@ -90,7 +89,7 @@ describe("MonCraft", function () {
       const MonCraft = await ethers.getContractFactory("MonCraft");
 
       // Create arrays with mismatched lengths
-      const invalidNames = ["Pikachu", "Bulbasaur"];
+      const invalidNames = ["Mon1", "Mon2"];
 
       await expect(
         MonCraft.deploy(
@@ -122,7 +121,7 @@ describe("MonCraft", function () {
       if (!receipt) throw new Error("Transaction receipt not found");
 
       const newSessionEvent = receipt.logs.find(
-        (log) => log.topics[0] === ethers.id("NewSession(string)")
+        (log: any) => log.topics[0] === ethers.id("NewSession(string)")
       );
 
       expect(newSessionEvent).to.not.be.undefined;
@@ -138,7 +137,7 @@ describe("MonCraft", function () {
 
       // Get session code from logs
       const newSessionEvent = receipt.logs.find(
-        (log) => log.topics[0] === ethers.id("NewSession(string)")
+        (log: any) => log.topics[0] === ethers.id("NewSession(string)")
       );
       if (!newSessionEvent || !('args' in newSessionEvent)) {
         throw new Error("New session event not found or malformed");
@@ -167,7 +166,7 @@ describe("MonCraft", function () {
 
       // Get session code from logs
       const newSessionEvent = receipt.logs.find(
-        (log) => log.topics[0] === ethers.id("NewSession(string)")
+        (log: any) => log.topics[0] === ethers.id("NewSession(string)")
       );
       if (!newSessionEvent || !('args' in newSessionEvent)) {
         throw new Error("New session event not found or malformed");
@@ -192,7 +191,7 @@ describe("MonCraft", function () {
 
       // Get session code from logs
       const newSessionEvent = receipt.logs.find(
-        (log) => log.topics[0] === ethers.id("NewSession(string)")
+        (log: any) => log.topics[0] === ethers.id("NewSession(string)")
       );
       if (!newSessionEvent || !('args' in newSessionEvent)) {
         throw new Error("New session event not found or malformed");
@@ -220,7 +219,7 @@ describe("MonCraft", function () {
 
       // Get session code from logs
       const newSessionEvent = receipt.logs.find(
-        (log) => log.topics[0] === ethers.id("NewSession(string)")
+        (log: any) => log.topics[0] === ethers.id("NewSession(string)")
       );
       if (!newSessionEvent || !('args' in newSessionEvent)) {
         throw new Error("New session event not found or malformed");
