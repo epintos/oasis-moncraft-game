@@ -13,17 +13,17 @@ const config: HardhatUserConfig = {
     sapphire: {
       url: "https://sapphire.oasis.io",
       chainId: 0x5afe,
-      accounts: [process.env.PRIVATE_KEY as string],
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
     "sapphire-testnet": {
       url: "https://testnet.sapphire.oasis.io",
-      accounts: [process.env.TESTNET_PRIVATE_KEY as string],
+      accounts: process.env.TESTNET_PRIVATE_KEY ? [process.env.TESTNET_PRIVATE_KEY] : [],
       chainId: 0x5aff,
     },
     "sapphire-localnet": {
       url: "http://localhost:9001",
       chainId: 0x5afd,
-      accounts: [process.env.LOCAL_PRIVATE_KEY as string],
+      accounts: process.env.LOCAL_PRIVATE_KEY ? [process.env.LOCAL_PRIVATE_KEY] : [],
     },
   },
 };

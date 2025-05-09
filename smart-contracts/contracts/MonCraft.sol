@@ -31,6 +31,7 @@ contract MonCraft is IERC721Receiver {
         bytes32 code;
         uint256 currentStep;
         uint256[] monstersTokenIds;
+        mapping(uint256 monsterTokenId => bool exists) monsterTokenIdsExists;
     }
 
     /// STATE VARIABLES
@@ -120,6 +121,7 @@ contract MonCraft is IERC721Receiver {
         session.status = Status.IN_PROGRESS;
         uint256 tokenId = s_monsterNFT.mint(address(this), s_monsters[0]);
         session.monstersTokenIds.push(tokenId);
+        session.monsterTokenIdsExists[tokenId] = true;
         s_sessionsQty++;
         emit NewSession(sessionCode);
     }
@@ -160,6 +162,7 @@ contract MonCraft is IERC721Receiver {
         if (percentage >= monster.chancesOfCapture) {
             uint256 tokenId = s_monsterNFT.mint(address(this), monster);
             session.monstersTokenIds.push(tokenId);
+            session.monsterTokenIdsExists[tokenId] = true;
             emit MonsterCaptured(sessionCode, monsterIndex);
         }
     }
@@ -175,6 +178,7 @@ contract MonCraft is IERC721Receiver {
                 session.monstersTokenIds[i] = session.monstersTokenIds[session.monstersTokenIds.length - 1];
                 session.monstersTokenIds.pop();
                 s_monsterNFT.burn(tokenId);
+                session.monsterTokenIdsExists[tokenId] = false;
                 emit MonsterReleased(sessionCode, tokenId);
                 return;
             }
@@ -211,12 +215,16 @@ contract MonCraft is IERC721Receiver {
 
         for (uint256 i = 0; i < monstersToWithdraw.length; i++) {
             uint256 tokenId = monstersToWithdraw[i];
+            session.monsterTokenIdsExists[tokenId] = false;
+        }
+
+        for (uint256 i = 0; i < monstersToWithdraw.length; i++) {
+            uint256 tokenId = monstersToWithdraw[i];
             s_monsterNFT.safeTransferFrom(address(this), player, tokenId);
         }
 
         emit MonstersWithdrawn(sessionCode, player);
     }
-    // TODO: validate that they are not duplicated
 
     function importMonsters(bytes32 sessionCode, uint256[] memory tokenIds) external onlyROFL {
         Session storage session = s_codeSessions[sessionCode];
@@ -227,10 +235,14 @@ contract MonCraft is IERC721Receiver {
             revert MonCraft__AlreadyMaxMonsters();
         }
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            session.monstersTokenIds.push(tokenIds[i]);
+            if (!session.monsterTokenIdsExists[tokenIds[i]]) {
+                session.monstersTokenIds.push(tokenIds[i]);
+            }
         }
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            s_monsterNFT.safeTransferFrom(msg.sender, address(this), tokenIds[i]);
+            if (!session.monsterTokenIdsExists[tokenIds[i]]) {
+                s_monsterNFT.safeTransferFrom(msg.sender, address(this), tokenIds[i]);
+            }
         }
         emit MonstersImported(sessionCode, msg.sender);
     }
@@ -255,7 +267,7 @@ contract MonCraft is IERC721Receiver {
     // PUBLIC & EXTERNAL VIEW FUNCTIONS
     // increases move in ROFL
     function checkStep(bytes32 sessionCode, uint256 playerStep) external view returns (uint256, bool) {
-        Session memory session = s_codeSessions[sessionCode];
+        Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
         }
