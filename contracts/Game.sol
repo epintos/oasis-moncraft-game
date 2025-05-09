@@ -8,26 +8,36 @@ import {GameNFT} from "./GameNFT.sol";
 contract Game {
     /// ERRORS
     error Game__InvalidAssetsLength();
+    error Game__AlreadyMaxAssets();
+    error Game__SessionDoesNotExist();
+
+    enum Status {
+        ABSENT,
+        IN_PROGRESS
+    }
 
     /// TYPES
     struct Session {
+        Status status;
         string code;
         address player;
         uint256 currentStep;
+        uint256[] assets;
     }
 
     /// STATE VARIABLES
     uint256 private s_seed;
     GameNFT private s_gameNFT;
     GameNFT.Asset[] public s_assets;
-    mapping(address player => Session session) private s_playerSessions; // Do we need it?
     mapping(string code => Session session) private s_codeSessions;
+    uint256 constant MAX_ASSETS = 10;
 
     /// EVENTS
     event NewSession(address indexed player, string sessionCode);
     event AssetCaptured(string indexed sessionCode, uint256 tokenId);
     event StepsSynced(string indexed sessionCode, uint256 currentStep);
     event AssetUpdated(string indexed sessionCode, uint256 newHP);
+    event AssetReleased(string indexed sessionCode, uint256 tokenId);
 
     /// FUNCTIONS
 
@@ -71,38 +81,71 @@ contract Game {
     // EXTERNAL FUNCTIONS
     function startGame() external returns (string memory sessionCode) {
         sessionCode = _generateCode();
-        Session memory session = Session({code: sessionCode, player: msg.sender, currentStep: 0});
-        s_playerSessions[msg.sender] = session;
-        s_codeSessions[sessionCode] = s_playerSessions[msg.sender];
-        s_gameNFT.mint(msg.sender, s_assets[0]);
+        Session storage session = s_codeSessions[sessionCode];
+        session.code = sessionCode;
+        session.player = msg.sender;
+        session.currentStep = 0;
+        session.status = Status.IN_PROGRESS;
+        uint256 tokenId = s_gameNFT.mint(address(this), s_assets[0]);
+        session.assets.push(tokenId);
 
         emit NewSession(msg.sender, sessionCode);
     }
 
     // used by ROFL to sync steps when users saves or timeouts
     function syncSteps(string memory sessionCode, uint256 currentStep) external {
+        Session storage session = s_codeSessions[sessionCode];
+        if (session.status != Status.IN_PROGRESS) {
+            revert Game__SessionDoesNotExist();
+        }
         s_codeSessions[sessionCode].currentStep = currentStep;
         emit StepsSynced(sessionCode, currentStep);
     }
 
     function captureAsset(string memory sessionCode, uint256 assetIndex) external {
         Session storage session = s_codeSessions[sessionCode];
+        if (session.status != Status.IN_PROGRESS) {
+            revert Game__SessionDoesNotExist();
+        }
+
         GameNFT.Asset memory asset = s_assets[assetIndex];
+
+        if (session.assets.length == MAX_ASSETS) {
+            revert Game__AlreadyMaxAssets();
+        }
 
         uint256 percentage = uint256(keccak256(abi.encodePacked(s_seed, session.player, block.timestamp))) % 100;
 
         if (percentage >= asset.chancesOfCapture) {
-            s_gameNFT.mint(msg.sender, asset);
+            uint256 tokenId = s_gameNFT.mint(msg.sender, asset);
+            session.assets.push(tokenId);
             // session.currentStep++;
             emit AssetCaptured(sessionCode, assetIndex);
         }
+    }
+
+    function releaseAsset(string memory sessionCode, uint256 tokenId) external {
+        Session storage session = s_codeSessions[sessionCode];
+        if (session.status != Status.IN_PROGRESS) {
+            revert Game__SessionDoesNotExist();
+        }
+
+        for (uint256 i = 0; i < session.assets.length; i++) {
+            if (session.assets[i] == tokenId) {
+                session.assets[i] = session.assets[session.assets.length - 1];
+                session.assets.pop();
+                break;
+            }
+        }
+        s_gameNFT.burn(tokenId);
+        emit AssetReleased(sessionCode, tokenId);
     }
 
     // PRIVATE & INTERNAL VIEW FUNCTIONS
     function _generateCode() private view returns (string memory) {
         bytes32 hash = keccak256(abi.encodePacked(s_seed, msg.sender));
         bytes memory alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        bytes memory code = new bytes(6); // change length as needed
+        bytes memory code = new bytes(6);
 
         for (uint256 i = 0; i < code.length; i++) {
             code[i] = alphabet[uint8(hash[i]) % alphabet.length];
