@@ -17,6 +17,7 @@
   },
   "scripts": {
     "deploy-local": "pnpm hardhat compile && pnpm hardhat deploy --network sapphire-localnet",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "generate-abi": "pnpm hardhat compile && pnpm hardhat run scripts/export-abi.ts"
   }
 }
