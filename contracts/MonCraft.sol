@@ -7,9 +7,10 @@ import {MonsterNFT} from "./MonsterNFT.sol";
 
 contract MonCraft {
     /// ERRORS
-    error Game__InvalidMonstersLength();
-    error Game__AlreadyMaxMonsters();
-    error Game__SessionDoesNotExist();
+    error MonCraft__InvalidMonstersLength();
+    error MonCraft__AlreadyMaxMonsters();
+    error MonCraft__SessionDoesNotExist();
+    error MonCraft__NotROLFAddress();
 
     enum Status {
         ABSENT,
@@ -20,9 +21,8 @@ contract MonCraft {
     struct Session {
         Status status;
         string code;
-        address player;
         uint256 currentStep;
-        uint256[] monsters;
+        uint256[] monstersTokenIds;
     }
 
     /// STATE VARIABLES
@@ -31,13 +31,22 @@ contract MonCraft {
     MonsterNFT.Monster[] public s_monsters;
     mapping(string code => Session session) private s_codeSessions;
     uint256 constant MAX_ASSETS = 10;
+    address private s_roflAddress;
 
     /// EVENTS
-    event NewSession(address indexed player, string sessionCode);
+    event NewSession(string sessionCode);
     event MonsterCaptured(string indexed sessionCode, uint256 tokenId);
     event StepsSynced(string indexed sessionCode, uint256 currentStep);
     event MonsterUpdated(string indexed sessionCode, uint256 newHP);
     event MonsterReleased(string indexed sessionCode, uint256 tokenId);
+
+    /// MODIFIERS
+    modifier onlyROFL() {
+        if (msg.sender != s_roflAddress) {
+            revert MonCraft__NotROLFAddress();
+        }
+        _;
+    }
 
     /// FUNCTIONS
 
@@ -49,14 +58,15 @@ contract MonCraft {
         uint256[] memory attackDamages,
         uint256[] memory defenses,
         uint256[] memory chancesOfAppearance, // ordered by appearence DESC
-        uint256[] memory chancesOfCapture
+        uint256[] memory chancesOfCapture, // ordered by appearence DESC
+        address roflAddress
     ) {
         if (
             names.length != imageURIs.length || names.length != initialHPs.length
                 || names.length != attackDamages.length || names.length != defenses.length
                 || names.length != chancesOfAppearance.length || names.length != chancesOfCapture.length
         ) {
-            revert Game__InvalidMonstersLength();
+            revert MonCraft__InvalidMonstersLength();
         }
 
         for (uint256 i = 0; i < names.length; i++) {
@@ -76,6 +86,7 @@ contract MonCraft {
 
         s_seed = uint256(bytes32(Sapphire.randomBytes(32, "")));
         s_gameNFT = new MonsterNFT();
+        s_roflAddress = roflAddress;
     }
 
     // EXTERNAL FUNCTIONS
@@ -83,42 +94,41 @@ contract MonCraft {
         sessionCode = _generateCode();
         Session storage session = s_codeSessions[sessionCode];
         session.code = sessionCode;
-        session.player = msg.sender;
         session.currentStep = 0;
         session.status = Status.IN_PROGRESS;
         uint256 tokenId = s_gameNFT.mint(address(this), s_monsters[0]);
-        session.monsters.push(tokenId);
+        session.monstersTokenIds.push(tokenId);
 
-        emit NewSession(msg.sender, sessionCode);
+        emit NewSession(sessionCode);
     }
 
     // used by ROFL to sync steps when users saves or timeouts
-    function syncSteps(string memory sessionCode, uint256 currentStep) external {
+    function syncSteps(string memory sessionCode, uint256 currentStep) external onlyROFL {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
-            revert Game__SessionDoesNotExist();
+            revert MonCraft__SessionDoesNotExist();
         }
         s_codeSessions[sessionCode].currentStep = currentStep;
         emit StepsSynced(sessionCode, currentStep);
     }
 
-    function captureMonster(string memory sessionCode, uint256 monsterIndex) external {
+    function captureMonster(string memory sessionCode, uint256 monsterIndex) external onlyROFL {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
-            revert Game__SessionDoesNotExist();
+            revert MonCraft__SessionDoesNotExist();
         }
 
         MonsterNFT.Monster memory monster = s_monsters[monsterIndex];
 
-        if (session.monsters.length == MAX_ASSETS) {
-            revert Game__AlreadyMaxMonsters();
+        if (session.monstersTokenIds.length == MAX_ASSETS) {
+            revert MonCraft__AlreadyMaxMonsters();
         }
 
-        uint256 percentage = uint256(keccak256(abi.encodePacked(s_seed, session.player, block.timestamp))) % 100;
+        uint256 percentage = uint256(keccak256(abi.encodePacked(s_seed, session.code, block.timestamp))) % 100;
 
         if (percentage >= monster.chancesOfCapture) {
-            uint256 tokenId = s_gameNFT.mint(msg.sender, monster);
-            session.monsters.push(tokenId);
+            uint256 tokenId = s_gameNFT.mint(address(this), monster);
+            session.monstersTokenIds.push(tokenId);
             // session.currentStep++;
             emit MonsterCaptured(sessionCode, monsterIndex);
         }
@@ -127,13 +137,13 @@ contract MonCraft {
     function releaseMonster(string memory sessionCode, uint256 tokenId) external {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
-            revert Game__SessionDoesNotExist();
+            revert MonCraft__SessionDoesNotExist();
         }
 
-        for (uint256 i = 0; i < session.monsters.length; i++) {
-            if (session.monsters[i] == tokenId) {
-                session.monsters[i] = session.monsters[session.monsters.length - 1];
-                session.monsters.pop();
+        for (uint256 i = 0; i < session.monstersTokenIds.length; i++) {
+            if (session.monstersTokenIds[i] == tokenId) {
+                session.monstersTokenIds[i] = session.monstersTokenIds[session.monstersTokenIds.length - 1];
+                session.monstersTokenIds.pop();
                 break;
             }
         }
@@ -143,7 +153,7 @@ contract MonCraft {
 
     // PRIVATE & INTERNAL VIEW FUNCTIONS
     function _generateCode() private view returns (string memory) {
-        bytes32 hash = keccak256(abi.encodePacked(s_seed, msg.sender));
+        bytes32 hash = keccak256(abi.encodePacked(s_seed, block.timestamp));
         bytes memory alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         bytes memory code = new bytes(6);
 
@@ -156,8 +166,13 @@ contract MonCraft {
 
     // PUBLIC & EXTERNAL VIEW FUNCTIONS
     // increases move in ROFL
-    function checkStep(uint256 playerStep) external view returns (uint256, bool) {
-        uint256 percentage = uint256(keccak256(abi.encodePacked(s_seed, msg.sender, playerStep, block.timestamp))) % 100;
+    function checkStep(string memory sessionCode, uint256 playerStep) external view onlyROFL returns (uint256, bool) {
+        Session memory session = s_codeSessions[sessionCode];
+        if (session.status != Status.IN_PROGRESS) {
+            revert MonCraft__SessionDoesNotExist();
+        }
+        uint256 percentage =
+            uint256(keccak256(abi.encodePacked(s_seed, sessionCode, playerStep, block.timestamp))) % 100;
         for (uint256 i = 0; i < s_monsters.length; i++) {
             if (percentage < s_monsters[i].chancesOfApperance) {
                 return (i, true);
