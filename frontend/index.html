@@ -4,6 +4,23 @@
   <meta charset="UTF-8">
   <title>MonCraft Game Client</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 40px);
+      grid-template-rows: repeat(5, 40px);
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+    .cell {
+      width: 40px;
+      height: 40px;
+      background-color: #ddd;
+    }
+    .player {
+      background-color: #4caf50;
+    }
+  </style>
 </head>
 <body>
   <h1>MonCraft Game Client</h1>
@@ -18,10 +35,14 @@
   <button onclick="sendTransaction()">Send Transaction</button>
   <div>
     <label for="sessionCode">Session Code:</label>
-    <input type="text" id="sessionCode" placeholder="Enter session code" readonly />
+    <input type="text" id="sessionCode" placeholder="Enter session code" />
   </div>
-  <button onclick="startSession()">Start Session</button>
+  <button onclick="startSession()">Start Game</button>
+  <button onclick="loadGame()">Load Game</button>
+  <button onclick="saveGame()">Save Game</button>
   <button onclick="move()">Move</button>
+  <h3>Game Grid</h3>
+  <div id="grid" class="grid"></div>
   <h3>Response:</h3>
   <pre id="output">Connecting...</pre>
   <script src="app.js"></script>

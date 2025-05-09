@@ -11,6 +11,34 @@ const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
 const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, abi, wallet);
 
+async function loadGame(sessionCode) {
+  console.log('Loading game with session code:', sessionCode);
+  try {
+
+    const session = await contract.s_codeSessions(sessionCode);
+    console.log(session);
+    const statusInProgress = "1";
+    console.log('Session status:', session.status.toString());
+
+    if (session.status.toString() !== statusInProgress) {
+      throw new Error('Session is not in progress');
+    }
+
+    return {
+      success: true,
+      sessionCode: session.code,
+      currentStep: parseInt(session.currentStep),
+      message: `Loaded session with code: ${session.code}`,
+    };
+  } catch (error) {
+    console.error('Load game failed:', error);
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+}
+
 async function sendNativeToken(toAddress, amountInEther) {
   try {
     const tx = await wallet.sendTransaction({
@@ -92,4 +120,24 @@ async function checkStep(sessionCode, playerStep) {
   }
 }
 
-module.exports = { sendNativeToken, startGame, checkStep };
+async function saveGame(sessionCode, currentStep) {
+  try {
+    const tx = await contract.syncCurrentStep(sessionCode, currentStep);
+    const receipt = await tx.wait();
+
+    return {
+      success: true,
+      transactionHash: receipt.hash,
+      message: `Game saved at step ${currentStep}`,
+    };
+  } catch (error) {
+    console.error('Save game failed:', error);
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+}
+
+
+module.exports = { sendNativeToken, startGame, checkStep, loadGame, saveGame };

@@ -1,7 +1,7 @@
 const express = require('express');
 const WebSocket = require('ws');
 require('dotenv').config();
-const { sendNativeToken, startGame, checkStep } = require('./blockchain');
+const { sendNativeToken, startGame, checkStep, loadGame, saveGame } = require('./blockchain');
 
 const app = express();
 const server = app.listen(process.env.PORT, () =>
@@ -29,6 +29,12 @@ wss.on('connection', (ws) => {
       } else if (data.type === 'checkStep' && data.sessionCode && data.playerStep !== undefined) {
         const result = await checkStep(data.sessionCode, data.playerStep);
         response = { type: 'checkStepResult', ...result };
+      } else if (data.type === 'loadGame' && data.sessionCode) {
+        const result = await loadGame(data.sessionCode);
+        response = { type: 'loadGameResult', ...result };
+      } else if (data.type === 'saveGame' && data.sessionCode && data.currentStep !== undefined) {
+        const result = await saveGame(data.sessionCode, data.currentStep);
+        response = { type: 'saveGameResult', ...result };
       } else {
         response = {
           type: 'error',
