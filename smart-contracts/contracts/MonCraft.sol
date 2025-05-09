@@ -264,7 +264,7 @@ contract MonCraft is IERC721Receiver {
         uint256 percentageAppearance = uint256(hashAppearance) % 100;
         uint256 percentageMonster = uint256(hashMonster) % 100;
 
-        if (percentageAppearance >= PROBABILITY_APPEARANCE) {
+        if (percentageAppearance <= PROBABILITY_APPEARANCE) {
             for (uint256 i = 0; i < s_monsters.length; i++) {
                 if (percentageMonster < s_monsters[i].chancesOfApperance) {
                     return (i, true);
