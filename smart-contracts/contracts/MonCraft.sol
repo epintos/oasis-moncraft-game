@@ -202,6 +202,7 @@ contract MonCraft is IERC721Receiver {
 
         emit MonstersWithdrawn(sessionCode, player);
     }
+    // TODO: validate that they are not duplicated
 
     function importMonsters(bytes32 sessionCode, uint256[] memory tokenIds) external onlyROFL {
         Session storage session = s_codeSessions[sessionCode];
