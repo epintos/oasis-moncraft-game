@@ -29,11 +29,11 @@ contract MonCraft is IERC721Receiver {
 
     /// STATE VARIABLES
     uint256 private s_seed;
-    MonsterNFT private s_gameNFT;
+    MonsterNFT public s_monsterNFT;
     MonsterNFT.Monster[] public s_monsters;
-    mapping(string code => Session session) private s_codeSessions;
-    uint256 constant MAX_ASSETS = 10;
-    address private s_roflAddress;
+    mapping(string code => Session session) public s_codeSessions;
+    uint256 public constant MAX_ASSETS = 10;
+    address public s_roflAddress;
 
     /// EVENTS
     event NewSession(string sessionCode);
@@ -87,18 +87,18 @@ contract MonCraft is IERC721Receiver {
         }
 
         s_seed = uint256(bytes32(Sapphire.randomBytes(32, "")));
-        s_gameNFT = new MonsterNFT();
+        s_monsterNFT = new MonsterNFT();
         s_roflAddress = roflAddress;
     }
 
     // EXTERNAL FUNCTIONS
-    function startGame() external returns (string memory sessionCode) {
+    function startGame() external onlyROFL returns (string memory sessionCode) {
         sessionCode = _generateCode();
         Session storage session = s_codeSessions[sessionCode];
         session.code = sessionCode;
         session.currentStep = 0;
         session.status = Status.IN_PROGRESS;
-        uint256 tokenId = s_gameNFT.mint(address(this), s_monsters[0]);
+        uint256 tokenId = s_monsterNFT.mint(address(this), s_monsters[0]);
         session.monstersTokenIds.push(tokenId);
 
         emit NewSession(sessionCode);
@@ -129,7 +129,7 @@ contract MonCraft is IERC721Receiver {
         uint256 percentage = uint256(keccak256(abi.encodePacked(s_seed, session.code, block.timestamp))) % 100;
 
         if (percentage >= monster.chancesOfCapture) {
-            uint256 tokenId = s_gameNFT.mint(address(this), monster);
+            uint256 tokenId = s_monsterNFT.mint(address(this), monster);
             session.monstersTokenIds.push(tokenId);
             // session.currentStep++;
             emit MonsterCaptured(sessionCode, monsterIndex);
@@ -149,7 +149,7 @@ contract MonCraft is IERC721Receiver {
                 break;
             }
         }
-        s_gameNFT.burn(tokenId);
+        s_monsterNFT.burn(tokenId);
         emit MonsterReleased(sessionCode, tokenId);
     }
 

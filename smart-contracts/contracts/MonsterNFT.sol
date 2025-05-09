@@ -21,8 +21,8 @@ contract MonsterNFT is ERC721, Ownable {
         uint256 chancesOfCapture;
     }
 
-    uint256 private s_totalSupply;
-    mapping(uint256 => Monster) private s_monsters;
+    uint256 public s_totalSupply;
+    mapping(uint256 => Monster) public s_monsters;
 
     event HPUpdated(uint256 indexed tokenId, uint256 newHP);
 
