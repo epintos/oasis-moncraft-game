@@ -1,18 +1,13 @@
 const express = require('express');
 const WebSocket = require('ws');
-const path = require('path');
 require('dotenv').config();
-const { sendNativeToken } = require('./blockchain');
+const { sendNativeToken, startGame, checkStep } = require('./blockchain');
 
 const app = express();
 const server = app.listen(process.env.PORT, () =>
   console.log(`Server running on port ${process.env.PORT}`)
 );
 
-// Serve static frontend files
-app.use(express.static(path.join(__dirname, 'frontend')));
-
-// WebSocket server
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
@@ -24,14 +19,20 @@ wss.on('connection', (ws) => {
       const data = JSON.parse(message.toString());
       console.log('Received:', data);
 
-      // Handle sendNativeToken request
       if (data.type === 'sendNativeToken' && data.toAddress && data.amount) {
         const result = await sendNativeToken(data.toAddress, data.amount);
         response = { type: 'transactionResult', ...result };
+      } else if (data.type === 'startGame') {
+        console.log("sarasa");
+        const result = await startGame();
+        response = { type: 'startGameResult', ...result };
+      } else if (data.type === 'checkStep' && data.sessionCode && data.playerStep !== undefined) {
+        const result = await checkStep(data.sessionCode, data.playerStep);
+        response = { type: 'checkStepResult', ...result };
       } else {
         response = {
           type: 'error',
-          message: 'Invalid request. Use {type: "sendNativeToken", toAddress, amount}',
+          message: 'Invalid request. Use {type: "sendNativeToken", toAddress, amount}, {type: "startGame"}, or {type: "checkStep", sessionCode, playerStep}',
         };
       }
     } catch (error) {
