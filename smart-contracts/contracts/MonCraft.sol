@@ -13,6 +13,11 @@ contract MonCraft is IERC721Receiver {
     error MonCraft__SessionDoesNotExist();
     error MonCraft__NotROLFAddress();
     error MonCraft__ReceiverIsNotCurrentContract();
+    error MonCraft__InvalidSessionCode();
+    error MonCraft__CurrentStepIsLower();
+    error MonCraft__SessionDoesNotHaveTokenId();
+    error MonCraft__MonsterDoesNotExist();
+    error MonCraft__TransferFailed();
 
     enum Status {
         ABSENT,
@@ -42,6 +47,8 @@ contract MonCraft is IERC721Receiver {
     event StepsSynced(bytes32 indexed sessionCode, uint256 currentStep);
     event MonsterUpdated(bytes32 indexed sessionCode, uint256 newHP);
     event MonsterReleased(bytes32 indexed sessionCode, uint256 tokenId);
+    event MonstersWithdrawn(bytes32 indexed sessionCode, address indexed player);
+    event MonstersImported(bytes32 indexed sessionCode, address indexed player);
 
     /// MODIFIERS
     modifier onlyROFL() {
@@ -111,11 +118,17 @@ contract MonCraft is IERC721Receiver {
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
         }
+        if (currentStep <= session.currentStep) {
+            revert MonCraft__CurrentStepIsLower();
+        }
         s_codeSessions[sessionCode].currentStep = currentStep;
         emit StepsSynced(sessionCode, currentStep);
     }
 
     function captureMonster(bytes32 sessionCode, uint256 monsterIndex) external onlyROFL {
+        if (monsterIndex >= s_monsters.length) {
+            revert MonCraft__MonsterDoesNotExist();
+        }
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
@@ -147,11 +160,12 @@ contract MonCraft is IERC721Receiver {
             if (session.monstersTokenIds[i] == tokenId) {
                 session.monstersTokenIds[i] = session.monstersTokenIds[session.monstersTokenIds.length - 1];
                 session.monstersTokenIds.pop();
-                break;
+                s_monsterNFT.burn(tokenId);
+                emit MonsterReleased(sessionCode, tokenId);
+                return;
             }
         }
-        s_monsterNFT.burn(tokenId);
-        emit MonsterReleased(sessionCode, tokenId);
+        revert MonCraft__SessionDoesNotHaveTokenId();
     }
 
     /**
@@ -168,8 +182,45 @@ contract MonCraft is IERC721Receiver {
         }
         return this.onERC721Received.selector;
     }
-    // PRIVATE & INTERNAL VIEW FUNCTIONS
 
+    function withdrawMonsters(bytes32 sessionCode, address player) external onlyROFL {
+        Session storage session = s_codeSessions[sessionCode];
+
+        // Check if session exists and is in progress
+        if (session.status != Status.IN_PROGRESS) {
+            revert MonCraft__SessionDoesNotExist();
+        }
+
+        uint256[] memory monstersToWithdraw = session.monstersTokenIds;
+
+        session.monstersTokenIds = new uint256[](0);
+
+        for (uint256 i = 0; i < monstersToWithdraw.length; i++) {
+            uint256 tokenId = monstersToWithdraw[i];
+            s_monsterNFT.safeTransferFrom(address(this), player, tokenId);
+        }
+
+        emit MonstersWithdrawn(sessionCode, player);
+    }
+
+    function importMonsters(bytes32 sessionCode, uint256[] memory tokenIds) external onlyROFL {
+        Session storage session = s_codeSessions[sessionCode];
+        if (session.status != Status.IN_PROGRESS) {
+            revert MonCraft__SessionDoesNotExist();
+        }
+        if (session.monstersTokenIds.length + tokenIds.length > MAX_ASSETS) {
+            revert MonCraft__AlreadyMaxMonsters();
+        }
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            session.monstersTokenIds.push(tokenIds[i]);
+        }
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            s_monsterNFT.safeTransferFrom(msg.sender, address(this), tokenIds[i]);
+        }
+        emit MonstersImported(sessionCode, msg.sender);
+    }
+
+    // PRIVATE & INTERNAL VIEW FUNCTIONS
     function _generateCode() private view returns (bytes32) {
         return keccak256(abi.encodePacked(s_seed, s_sessionsQty, block.timestamp));
     }
