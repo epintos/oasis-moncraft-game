@@ -22,7 +22,7 @@ contract MonCraft is IERC721Receiver {
     /// TYPES
     struct Session {
         Status status;
-        string code;
+        bytes32 code;
         uint256 currentStep;
         uint256[] monstersTokenIds;
     }
@@ -31,16 +31,17 @@ contract MonCraft is IERC721Receiver {
     uint256 private s_seed;
     MonsterNFT public s_monsterNFT;
     MonsterNFT.Monster[] public s_monsters;
-    mapping(string code => Session session) public s_codeSessions;
+    mapping(bytes32 code => Session session) public s_codeSessions;
     uint256 public constant MAX_ASSETS = 10;
     address public s_roflAddress;
+    uint256 public s_sessionsQty;
 
     /// EVENTS
-    event NewSession(string sessionCode);
-    event MonsterCaptured(string indexed sessionCode, uint256 tokenId);
-    event StepsSynced(string indexed sessionCode, uint256 currentStep);
-    event MonsterUpdated(string indexed sessionCode, uint256 newHP);
-    event MonsterReleased(string indexed sessionCode, uint256 tokenId);
+    event NewSession(bytes32 indexed sessionCode);
+    event MonsterCaptured(bytes32 indexed sessionCode, uint256 tokenId);
+    event StepsSynced(bytes32 indexed sessionCode, uint256 currentStep);
+    event MonsterUpdated(bytes32 indexed sessionCode, uint256 newHP);
+    event MonsterReleased(bytes32 indexed sessionCode, uint256 tokenId);
 
     /// MODIFIERS
     modifier onlyROFL() {
@@ -92,20 +93,20 @@ contract MonCraft is IERC721Receiver {
     }
 
     // EXTERNAL FUNCTIONS
-    function startGame() external onlyROFL returns (string memory sessionCode) {
-        sessionCode = _generateCode();
+    function startGame() external onlyROFL returns (bytes memory sessionCode) {
+        sessionCode = _generateCode(s_sessionsQty);
         Session storage session = s_codeSessions[sessionCode];
         session.code = sessionCode;
         session.currentStep = 0;
         session.status = Status.IN_PROGRESS;
         uint256 tokenId = s_monsterNFT.mint(address(this), s_monsters[0]);
         session.monstersTokenIds.push(tokenId);
-
+        s_sessionsQty++;
         emit NewSession(sessionCode);
     }
 
     // used by ROFL to sync steps when users saves or timeouts
-    function syncSteps(string memory sessionCode, uint256 currentStep) external onlyROFL {
+    function syncSteps(bytes memory sessionCode, uint256 currentStep) external onlyROFL {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
@@ -114,7 +115,7 @@ contract MonCraft is IERC721Receiver {
         emit StepsSynced(sessionCode, currentStep);
     }
 
-    function captureMonster(string memory sessionCode, uint256 monsterIndex) external onlyROFL {
+    function captureMonster(bytes memory sessionCode, uint256 monsterIndex) external onlyROFL {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
@@ -136,7 +137,7 @@ contract MonCraft is IERC721Receiver {
         }
     }
 
-    function releaseMonster(string memory sessionCode, uint256 tokenId) external {
+    function releaseMonster(bytes memory sessionCode, uint256 tokenId) external {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
@@ -170,20 +171,12 @@ contract MonCraft is IERC721Receiver {
     // PRIVATE & INTERNAL VIEW FUNCTIONS
 
     function _generateCode() private view returns (string memory) {
-        bytes32 hash = keccak256(abi.encodePacked(s_seed, block.timestamp));
-        bytes memory alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        bytes memory code = new bytes(6);
-
-        for (uint256 i = 0; i < code.length; i++) {
-            code[i] = alphabet[uint8(hash[i]) % alphabet.length];
-        }
-
-        return string(code);
+        return keccak256(abi.encodePacked(s_seed, s_sessionsQty, block.timestamp));
     }
 
     // PUBLIC & EXTERNAL VIEW FUNCTIONS
     // increases move in ROFL
-    function checkStep(string memory sessionCode, uint256 playerStep) external view onlyROFL returns (uint256, bool) {
+    function checkStep(bytes memory sessionCode, uint256 playerStep) external view onlyROFL returns (uint256, bool) {
         Session memory session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
