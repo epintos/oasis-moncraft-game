@@ -237,6 +237,7 @@ contract MonCraft is IERC721Receiver {
         for (uint256 i = 0; i < tokenIds.length; i++) {
             if (!session.monsterTokenIdsExists[tokenIds[i]]) {
                 session.monstersTokenIds.push(tokenIds[i]);
+                session.monsterTokenIdsExists[tokenIds[i]] = true;
             }
         }
         for (uint256 i = 0; i < tokenIds.length; i++) {
