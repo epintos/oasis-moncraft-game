@@ -93,8 +93,8 @@ contract MonCraft is IERC721Receiver {
     }
 
     // EXTERNAL FUNCTIONS
-    function startGame() external onlyROFL returns (bytes memory sessionCode) {
-        sessionCode = _generateCode(s_sessionsQty);
+    function startGame() external onlyROFL returns (bytes32 sessionCode) {
+        sessionCode = _generateCode();
         Session storage session = s_codeSessions[sessionCode];
         session.code = sessionCode;
         session.currentStep = 0;
@@ -106,7 +106,7 @@ contract MonCraft is IERC721Receiver {
     }
 
     // used by ROFL to sync steps when users saves or timeouts
-    function syncSteps(bytes memory sessionCode, uint256 currentStep) external onlyROFL {
+    function syncSteps(bytes32 sessionCode, uint256 currentStep) external onlyROFL {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
@@ -115,7 +115,7 @@ contract MonCraft is IERC721Receiver {
         emit StepsSynced(sessionCode, currentStep);
     }
 
-    function captureMonster(bytes memory sessionCode, uint256 monsterIndex) external onlyROFL {
+    function captureMonster(bytes32 sessionCode, uint256 monsterIndex) external onlyROFL {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
@@ -137,7 +137,7 @@ contract MonCraft is IERC721Receiver {
         }
     }
 
-    function releaseMonster(bytes memory sessionCode, uint256 tokenId) external {
+    function releaseMonster(bytes32 sessionCode, uint256 tokenId) external {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
@@ -170,13 +170,13 @@ contract MonCraft is IERC721Receiver {
     }
     // PRIVATE & INTERNAL VIEW FUNCTIONS
 
-    function _generateCode() private view returns (string memory) {
+    function _generateCode() private view returns (bytes32) {
         return keccak256(abi.encodePacked(s_seed, s_sessionsQty, block.timestamp));
     }
 
     // PUBLIC & EXTERNAL VIEW FUNCTIONS
     // increases move in ROFL
-    function checkStep(bytes memory sessionCode, uint256 playerStep) external view onlyROFL returns (uint256, bool) {
+    function checkStep(bytes32 sessionCode, uint256 playerStep) external view onlyROFL returns (uint256, bool) {
         Session memory session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();

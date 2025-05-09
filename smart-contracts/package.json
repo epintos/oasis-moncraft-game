@@ -16,7 +16,7 @@
     "typescript": "^5.8.3"
   },
   "scripts": {
-    "deploy-local": "pnpm hardhat deploy --network sapphire-localnet",
+    "deploy-local": "pnpm hardhat compile && pnpm hardhat deploy --network sapphire-localnet",
     "test": "hardhat test"
   }
 }
