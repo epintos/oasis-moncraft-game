@@ -233,11 +233,22 @@ contract MonCraft is IERC721Receiver {
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
         }
-        uint256 percentage =
-            uint256(keccak256(abi.encodePacked(s_seed, sessionCode, playerStep, block.timestamp))) % 100;
-        for (uint256 i = 0; i < s_monsters.length; i++) {
-            if (percentage < s_monsters[i].chancesOfApperance) {
-                return (i, true);
+
+        bytes32 hashAppearance =
+            keccak256(abi.encodePacked(s_seed, sessionCode, playerStep, block.timestamp));
+        bytes32 hashMonster =
+            keccak256(abi.encode(hashAppearance));
+
+        uint256 percentageAppearance =
+            uint256(hashAppearance) % 100;
+        uint256 percentageMonster =
+            uint256(hashMonster) % 100;
+
+        if (percentageAppearance >= 20) {
+            for (uint256 i = 0; i < s_monsters.length; i++) {
+                if (percentageMonster < s_monsters[i].chancesOfApperance) {
+                    return (i, true);
+                }
             }
         }
 
