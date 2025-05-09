@@ -1,7 +1,7 @@
 const express = require('express');
 const WebSocket = require('ws');
 require('dotenv').config();
-const { sendNativeToken, startGame, checkStep, loadGame, saveGame } = require('./blockchain');
+const { sendNativeToken, startGame, checkStep, getSession, saveGame, captureMonster, getCapturedMonsters } = require('./blockchain');
 
 const app = express();
 const server = app.listen(process.env.PORT, () =>
@@ -11,41 +11,72 @@ const server = app.listen(process.env.PORT, () =>
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
-  console.log('Client connected');
+    console.log('Client connected');
+  
+    // store session state for this socket
+    ws.session = {
+      sessionCode: null,
+      playerStep: 0,
+    };
+  
+    ws.on('message', async (message) => {
+      let response;
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('Received:', data);
+  
+        if (data.type === 'startGame') {
+          const result = await startGame();
+          if (result.success) {
+            ws.session.sessionCode = result.sessionCode;
+            ws.session.playerStep = 0;
+          }
+          response = { type: 'startGameResult', ...result };
+  
+        }  else if (data.type === 'loadGame' && data.sessionCode) {
+            const result = await getSession(data.sessionCode);
+            if (result.success) {
+              ws.session.sessionCode = result.sessionCode;
+              ws.session.playerStep = result.currentStep;
+            }
+            response = { type: 'loadGameResult', ...result };
 
-  ws.on('message', async (message) => {
-    let response;
-    try {
-      const data = JSON.parse(message.toString());
-      console.log('Received:', data);
-
-      if (data.type === 'sendNativeToken' && data.toAddress && data.amount) {
-        const result = await sendNativeToken(data.toAddress, data.amount);
-        response = { type: 'transactionResult', ...result };
-      } else if (data.type === 'startGame') {
-        console.log("sarasa");
-        const result = await startGame();
-        response = { type: 'startGameResult', ...result };
-      } else if (data.type === 'checkStep' && data.sessionCode && data.playerStep !== undefined) {
-        const result = await checkStep(data.sessionCode, data.playerStep);
-        response = { type: 'checkStepResult', ...result };
-      } else if (data.type === 'loadGame' && data.sessionCode) {
-        const result = await loadGame(data.sessionCode);
-        response = { type: 'loadGameResult', ...result };
-      } else if (data.type === 'saveGame' && data.sessionCode && data.currentStep !== undefined) {
-        const result = await saveGame(data.sessionCode, data.currentStep);
-        response = { type: 'saveGameResult', ...result };
-      } else {
+        } else if (data.type === 'checkStep') {
+          const { sessionCode, playerStep } = ws.session;
+          const result = await checkStep(sessionCode, playerStep);
+          if (result.success) {
+            ws.session.playerStep += 1; // increment if successful move
+          }
+          response = { type: 'checkStepResult', ...result };
+  
+        } else if (data.type === 'saveGame') {
+          const result = await saveGame(ws.session.sessionCode, ws.session.playerStep);
+          response = { type: 'saveGameResult', ...result };
+  
+        } else if (data.type === 'captureMonster') {
+          const result = await captureMonster(ws.session.sessionCode, data.monsterIndex, ws.session.playerStep);
+          response = { type: 'captureMonsterResult', ...result };
+  
+        } else if (data.type === 'getCapturedMonsters') {
+          const result = await getCapturedMonsters(ws.session.sessionCode);
+          response = { type: 'getCapturedMonstersResult', ...result };
+  
+        } else {
+          response = {
+            type: 'error',
+            message: 'Unknown or invalid message type',
+          };
+        }
+      } catch (err) {
         response = {
           type: 'error',
-          message: 'Invalid request. Use {type: "sendNativeToken", toAddress, amount}, {type: "startGame"}, or {type: "checkStep", sessionCode, playerStep}',
+          message: 'Invalid JSON or server error',
         };
       }
-    } catch (error) {
-      response = { type: 'error', message: 'Invalid JSON or server error' };
-    }
-    ws.send(JSON.stringify(response));
+  
+      ws.send(JSON.stringify(response));
+    });
+  
+    ws.on('close', () => console.log('Client disconnected'));
   });
-
-  ws.on('close', () => console.log('Client disconnected'));
-});
+  

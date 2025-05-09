@@ -19,15 +19,41 @@ ws.onmessage = (event) => {
     }
 
     if (data.type === 'loadGameResult' && data.success) {
-      sessionCode = data.sessionCode;
-      playerStep = data.currentStep || 0;
-      document.getElementById('sessionCode').value = sessionCode;
-    }
+        sessionCode = data.sessionCode;
+        playerStep = data.currentStep || 0;
+        document.getElementById('sessionCode').value = sessionCode;
+        renderMonsterList(data.monsters || []);
+    }      
 
     if (data.type === 'saveGameResult' && data.success) {
         console.log(`Game saved at step ${playerStep}`);
-      }
+    }
 
+    if (data.type === 'checkStepResult' && data.hasAppeared) {
+        const confirmed = confirm(`A wild monster appeared (index ${data.monsterIndex})! Try to capture it?`);
+        if (confirmed) {
+          const request = {
+            type: 'captureMonster',
+            sessionCode,
+            monsterIndex: parseInt(data.monsterIndex),
+            currentStep: playerStep
+          };
+          ws.send(JSON.stringify(request));
+        }
+    }
+
+    if (data.type === 'captureMonsterResult' && data.success) {
+        alert(data.message);
+      
+        // Request updated session info
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'loadGame', // or "getSession" if you renamed it
+            sessionCode
+          }));
+        }
+    }
+      
   } catch (error) {
     document.getElementById('output').textContent = 'Error parsing response';
   }
@@ -122,14 +148,25 @@ function saveGame() {
     }
 }
 
+function renderMonsterList(monsters) {
+    const list = document.getElementById('monsterList');
+    list.innerHTML = '';
+  
+    if (!monsters || monsters.length === 0) {
+      list.innerHTML = '<li>None</li>';
+      return;
+    }
+  
+    monsters.forEach((id) => {
+      const li = document.createElement('li');
+      li.textContent = `Monster #${id}`;
+      list.appendChild(li);
+    });
+}
 
-
-
-
-
-const gridSize = 5;
-let playerX = 0;
-let playerY = 0;
+const gridSize = 11;
+let playerX = 5;
+let playerY = 5;
 
 function createGrid() {
   const grid = document.getElementById('grid');

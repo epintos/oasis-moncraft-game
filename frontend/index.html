@@ -7,8 +7,8 @@
   <style>
     .grid {
       display: grid;
-      grid-template-columns: repeat(5, 40px);
-      grid-template-rows: repeat(5, 40px);
+      grid-template-columns: repeat(11, 40px);
+      grid-template-rows: repeat(11, 40px);
       gap: 4px;
       margin-bottom: 20px;
     }
@@ -35,7 +35,7 @@
   <button onclick="sendTransaction()">Send Transaction</button>
   <div>
     <label for="sessionCode">Session Code:</label>
-    <input type="text" id="sessionCode" placeholder="Enter session code" />
+    <input type="text" id="sessionCode" placeholder="Enter session code" value="0x80718eff04895cfd92bc2827908e161db6ed66dc1dafc822641b303cde360be8" />
   </div>
   <button onclick="startSession()">Start Game</button>
   <button onclick="loadGame()">Load Game</button>
@@ -43,6 +43,8 @@
   <button onclick="move()">Move</button>
   <h3>Game Grid</h3>
   <div id="grid" class="grid"></div>
+  <h3>Captured Monsters</h3>
+  <ul id="monsterList"></ul>
   <h3>Response:</h3>
   <pre id="output">Connecting...</pre>
   <script src="app.js"></script>

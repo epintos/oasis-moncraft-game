@@ -11,11 +11,11 @@ const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
 const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, abi, wallet);
 
-async function loadGame(sessionCode) {
-  console.log('Loading game with session code:', sessionCode);
+async function getSession(sessionCode) {
   try {
-
     const session = await contract.s_codeSessions(sessionCode);
+    const monsters = await contract.getMonstersTokenIds(sessionCode);
+
     console.log(session);
     const statusInProgress = "1";
     console.log('Session status:', session.status.toString());
@@ -26,12 +26,13 @@ async function loadGame(sessionCode) {
 
     return {
       success: true,
-      sessionCode: session.code,
-      currentStep: parseInt(session.currentStep),
-      message: `Loaded session with code: ${session.code}`,
+      sessionCode,
+      currentStep: Number(session.currentStep),
+      monsters: monsters.map((m) => m.toString()),
+      message: `Loaded session ${sessionCode}`,
     };
   } catch (error) {
-    console.error('Load game failed:', error);
+    console.error('getSession failed:', error);
     return {
       success: false,
       message: error.message,
@@ -139,5 +140,67 @@ async function saveGame(sessionCode, currentStep) {
   }
 }
 
+async function captureMonster(sessionCode, monsterIndex, currentStep) {
+  try {
+    const tx = await contract.captureMonster(sessionCode, monsterIndex, currentStep);
+    const receipt = await tx.wait();
 
-module.exports = { sendNativeToken, startGame, checkStep, loadGame, saveGame };
+    let captured = null;
+
+    for (const log of receipt.logs) {
+      try {
+        const parsed = contract.interface.parseLog(log);
+        if (parsed.name === 'MonsterCaptured') {
+          captured = parsed.args.captured;
+          break;
+        }
+      } catch {
+        // skip unrelated logs
+      }
+    }
+
+    return {
+      success: true,
+      transactionHash: receipt.hash,
+      captured,
+      message: captured === true
+        ? `🎉 Monster ${monsterIndex} captured!`
+        : `❌ Monster ${monsterIndex} escaped.`,
+    };
+  } catch (error) {
+    console.error('Capture monster failed:', error);
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+}
+
+async function getCapturedMonsters(sessionCode) {
+  try {
+    const monsters = await contract.getMonstersTokenIds(sessionCode);
+    console.log("session.monstersTokenIds:", session.monstersTokenIds);
+    console.log('Captured monsters:', monsters);
+
+    return {
+      success: true,
+      monsters,
+    };
+  } catch (error) {
+    console.error('getCapturedMonsters failed:', error);
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+}
+
+module.exports = {
+  sendNativeToken,
+  startGame,
+  checkStep,
+  getSession,
+  saveGame,
+  captureMonster,
+  getCapturedMonsters
+};

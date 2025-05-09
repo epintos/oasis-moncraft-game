@@ -369,4 +369,13 @@ contract MonCraft is IERC721Receiver {
 
         return (0, false);
     }
+
+    /**
+     * @notice Needed because the session struct does not return this array.
+     * @param sessionCode The session identifier.
+     * @return monstersTokenIds The array of monsters.
+     */
+    function getMonstersTokenIds(bytes32 sessionCode) public view returns (uint256[] memory) {
+        return s_codeSessions[sessionCode].monstersTokenIds;
+    }
 }
