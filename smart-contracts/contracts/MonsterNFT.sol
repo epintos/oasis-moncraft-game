@@ -26,7 +26,7 @@ contract MonsterNFT is ERC721, Ownable {
 
     event HPUpdated(uint256 indexed tokenId, uint256 newHP);
 
-    constructor() ERC721("GameNFT", "GNFT") Ownable(msg.sender) {}
+    constructor() ERC721("Monster", "MON") Ownable(msg.sender) {}
 
     function mint(address to, Monster memory monster) external onlyOwner returns (uint256) {
         uint256 tokenId = s_totalSupply;
@@ -52,7 +52,7 @@ contract MonsterNFT is ERC721, Ownable {
             abi.encodePacked(
                 '{"name":"',
                 monster.name,
-                '"image":"',
+                '","image":"',
                 monster.imageURI,
                 '","attributes":[',
                 '{"trait_type":"Initial HP","value":',

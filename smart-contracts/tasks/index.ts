@@ -41,7 +41,8 @@ task("deploy").setAction(async (_args, hre) => {
     attackDamages,
     defenses,
     chancesOfAppearance,
-    chancesOfCapture
+    chancesOfCapture,
+    "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
   );
   const monCraftAddr = await monCraft.waitForDeployment();
 
