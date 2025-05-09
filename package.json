@@ -1,5 +1,5 @@
 {
-  "name": "Hackathon",
+  "name": "oasis-moncraft-game",
   "version": "0.0.1",
   "description": "Bla",
   "devDependencies": {
@@ -14,5 +14,8 @@
     "hardhat": "^2.24.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "deploy-local": "pnpm hardhat deploy --network sapphire-localnet"
   }
 }

@@ -30,7 +30,7 @@ const config: HardhatUserConfig = {
     },
     "sapphire-localnet": {
       // docker run -it -p8544-8548:8544-8548 ghcr.io/oasisprotocol/sapphire-localnet
-      url: "http://localhost:8545",
+      url: "http://localhost:9001",
       chainId: 0x5afd,
       accounts,
     },
