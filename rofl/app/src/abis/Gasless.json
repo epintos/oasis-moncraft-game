@@ -1,0 +1,170 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "payable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "len",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "need",
+        "type": "uint256"
+      }
+    ],
+    "name": "CBOR_Error_BufferOverrun",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "byteLength",
+        "type": "uint256"
+      }
+    ],
+    "name": "CBOR_Error_BytesTooLong",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CBOR_InvalidKey",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "CBOR_InvalidLength",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CBOR_InvalidMap",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "name": "CBOR_InvalidUintPrefix",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "name": "CBOR_InvalidUintSize",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "name": "CoreCallDataPublicKeyError",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DER_Split_Error",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Gasless__CallFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Gasless__FundingFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SubcallError",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "expmod_Error",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "k256Decompress_Invalid_Length_Error",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "k256DeriveY_Invalid_Prefix_Error",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "recoverV_Error",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "innercallAddr",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "innercall",
+        "type": "bytes"
+      }
+    ],
+    "name": "makeProxyTx",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "output",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "proxy",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  }
+]

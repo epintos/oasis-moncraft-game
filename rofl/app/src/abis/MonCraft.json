@@ -38,11 +38,6 @@
       },
       {
         "internalType": "address",
-        "name": "roflAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "owner",
         "type": "address"
       }
@@ -78,11 +73,6 @@
   {
     "inputs": [],
     "name": "MonCraft__MonsterDoesNotExist",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "MonCraft__NotROLFAddress",
     "type": "error"
   },
   {
@@ -175,12 +165,6 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "fightId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
       }
@@ -193,9 +177,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "sessionId",
-        "type": "uint256"
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -218,9 +202,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "sessionId",
-        "type": "uint256"
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -237,9 +221,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "sessionId",
-        "type": "uint256"
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -256,9 +240,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "sessionId",
-        "type": "uint256"
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
       },
       {
         "indexed": true,
@@ -275,9 +259,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "sessionId",
-        "type": "uint256"
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
       },
       {
         "indexed": true,
@@ -294,9 +278,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "sessionId",
-        "type": "uint256"
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
       }
     ],
     "name": "NewSession",
@@ -326,15 +310,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "fightId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "sessionId",
-        "type": "uint256"
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -351,9 +329,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "sessionId",
-        "type": "uint256"
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -404,11 +382,6 @@
         "internalType": "uint256",
         "name": "playerStep",
         "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "accessCode",
-        "type": "bytes32"
       }
     ],
     "name": "checkStep",
@@ -462,11 +435,6 @@
         "internalType": "bytes32",
         "name": "sessionCode",
         "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "accessCode",
-        "type": "bytes32"
       }
     ],
     "name": "getFightDamage",
@@ -486,11 +454,6 @@
         "internalType": "uint256",
         "name": "fightId",
         "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "accessCode",
-        "type": "bytes32"
       }
     ],
     "name": "getFightInformation",
@@ -517,37 +480,8 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "sessionId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "accessCode",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getSessionCode",
-    "outputs": [
-      {
         "internalType": "bytes32",
         "name": "sessionCode",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "sessionCode",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "accessCode",
         "type": "bytes32"
       }
     ],
@@ -816,19 +750,6 @@
   },
   {
     "inputs": [],
-    "name": "s_roflAddress",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "s_sessionsQty",
     "outputs": [
       {
@@ -851,9 +772,9 @@
     "name": "startGame",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "sessionId",
-        "type": "uint256"
+        "internalType": "bytes32",
+        "name": "sessionCode",
+        "type": "bytes32"
       }
     ],
     "stateMutability": "nonpayable",
@@ -966,19 +887,6 @@
       }
     ],
     "name": "updateROFLAccessCode",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newROFLAddress",
-        "type": "address"
-      }
-    ],
-    "name": "updateROFLAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

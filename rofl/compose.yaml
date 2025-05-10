@@ -1,0 +1,9 @@
+services:
+  moncraft-rofl:
+    image: dockede/moncraft:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    volumes:
+      - /run/rofl-appd.sock:/run/rofl-appd.sock

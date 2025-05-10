@@ -1,10 +1,9 @@
 import fs from "fs";
 import path from "path";
 
-async function main() {
-  const contractName = "MonCraft"; // change this to your contract name
+async function exportAbi(contractName: string) {
   const artifactPath = path.join(__dirname, `../artifacts/contracts/${contractName}.sol/${contractName}.json`);
-  const abiOutputPath = path.join(__dirname, `../..//rofl/app/src/abis.json`);
+  const abiOutputPath = path.join(__dirname, `../../rofl/app/src/abis/${contractName}.json`);
 
   const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
   const abi = artifact.abi;
@@ -13,6 +12,12 @@ async function main() {
   fs.writeFileSync(abiOutputPath, JSON.stringify(abi, null, 2));
 
   console.log(`✅ ABI written to: ${abiOutputPath}`);
+}
+
+async function main() {
+  await exportAbi("Gasless");
+  await exportAbi("MonCraft");
+  await exportAbi("MonsterNFT");
 }
 
 main().catch((error) => {

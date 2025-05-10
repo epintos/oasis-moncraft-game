@@ -3,18 +3,18 @@ const fs = require('fs');
 require('dotenv').config();
 
 const path = require('path');
-const abiPath = path.join(__dirname, 'abis.json');
-const abi = JSON.parse(fs.readFileSync(abiPath, 'utf8'));
+const monCraftAbiPath = path.join(__dirname, 'abis/MonCraft.json');
+const monCraftAbi = JSON.parse(fs.readFileSync(monCraftAbiPath, 'utf8'));
 
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
-const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, abi, wallet);
+const monCraft = new ethers.Contract(process.env.CONTRACT_ADDRESS, monCraftAbi, wallet);
 
 async function getSession(sessionCode) {
   try {
-    const session = await contract.s_codeSessions(sessionCode);
-    const monsters = await contract.getMonstersTokenIds(sessionCode);
+    const session = await monCraft.s_codeSessions(sessionCode);
+    const monsters = await monCraft.getMonstersTokenIds(sessionCode);
 
     console.log(session);
     const statusInProgress = "1";
@@ -63,7 +63,7 @@ async function sendNativeToken(toAddress, amountInEther) {
 
 async function startGame() {
   try {
-    const tx = await contract.startGame();
+    const tx = await monCraft.startGame();
     console.log('Transaction sent:', tx.hash);
     const receipt = await tx.wait();
     console.log('Transaction receipt:', receipt);
@@ -72,7 +72,7 @@ async function startGame() {
 
     for (const log of receipt.logs) {
       try {
-        const parsed = contract.interface.parseLog(log);
+        const parsed = monCraft.interface.parseLog(log);
         if (parsed.name === 'NewSession') {
           // Extract sessionCode from topics[1] (bytes32)
           sessionCode = parsed.args.sessionCode;
@@ -103,7 +103,7 @@ async function startGame() {
 
 async function checkStep(sessionCode, playerStep) {
   try {
-    const [monsterIndex, hasAppeared] = await contract.checkStep(sessionCode, playerStep);
+    const [monsterIndex, hasAppeared] = await monCraft.checkStep(sessionCode, playerStep);
     return {
       success: true,
       monsterIndex: monsterIndex.toString(),
@@ -123,7 +123,7 @@ async function checkStep(sessionCode, playerStep) {
 
 async function saveGame(sessionCode, currentStep) {
   try {
-    const tx = await contract.syncCurrentStep(sessionCode, currentStep);
+    const tx = await monCraft.syncCurrentStep(sessionCode, currentStep);
     const receipt = await tx.wait();
 
     return {
@@ -142,14 +142,14 @@ async function saveGame(sessionCode, currentStep) {
 
 async function captureMonster(sessionCode, monsterIndex, currentStep) {
   try {
-    const tx = await contract.captureMonster(sessionCode, monsterIndex, currentStep);
+    const tx = await monCraft.captureMonster(sessionCode, monsterIndex, currentStep);
     const receipt = await tx.wait();
 
     let captured = null;
 
     for (const log of receipt.logs) {
       try {
-        const parsed = contract.interface.parseLog(log);
+        const parsed = monCraft.interface.parseLog(log);
         if (parsed.name === 'MonsterCaptured') {
           captured = parsed.args.captured;
           break;
@@ -178,7 +178,7 @@ async function captureMonster(sessionCode, monsterIndex, currentStep) {
 
 async function getCapturedMonsters(sessionCode) {
   try {
-    const monsters = await contract.getMonstersTokenIds(sessionCode);
+    const monsters = await monCraft.getMonstersTokenIds(sessionCode);
     console.log("session.monstersTokenIds:", session.monstersTokenIds);
     console.log('Captured monsters:', monsters);
 
@@ -194,6 +194,34 @@ async function getCapturedMonsters(sessionCode) {
     };
   }
 }
+
+// async function sendGaslessTx(targetAddress, functionName, argsArray) {
+//   try {
+//     const gaslessAbiPath = path.join(__dirname, 'gaslessAbi.json');
+//     const gaslessAbi = JSON.parse(fs.readFileSync(gaslessAbiPath, 'utf8'));
+
+//     const gaslessContract = new ethers.Contract(process.env.GASLESS_CONTRACT_ADDRESS, gaslessAbi, wallet);
+
+//     // Encode inner call (e.g. call to CommentBox or your game monCraft)
+//     const innerCall = monCraft.interface.encodeFunctionData(functionName, argsArray);
+
+//     // Send gasless call via proxy
+//     const tx = await gaslessContract.makeProxyTx(contract.target, innerCall);
+//     const receipt = await tx.wait();
+
+//     return {
+//       success: true,
+//       txHash: receipt.hash,
+//       message: `Gasless tx successful: ${functionName}`,
+//     };
+//   } catch (error) {
+//     console.error('Gasless tx failed:', error);
+//     return {
+//       success: false,
+//       message: error.message,
+//     };
+//   }
+// }
 
 module.exports = {
   sendNativeToken,

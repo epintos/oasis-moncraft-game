@@ -16,7 +16,7 @@ contract MonCraft is IERC721Receiver, Ownable {
     error MonCraft__InvalidMonstersLength();
     error MonCraft__AlreadyMaxMonsters();
     error MonCraft__SessionDoesNotExist();
-    error MonCraft__NotValidAccessCode();
+    error MonCraft__NotROLFAddress();
     error MonCraft__ReceiverIsNotCurrentContract();
     error MonCraft__InvalidSessionCode();
     error MonCraft__CurrentStepIsLower();
@@ -25,6 +25,7 @@ contract MonCraft is IERC721Receiver, Ownable {
     error MonCraft__TransferFailed();
     error MonCraft__PlayerCannotJoinFight();
     error MonCraft__FightNotReady();
+    error MonCraft__NotValidAccessCode();
 
     enum Status {
         ABSENT,
@@ -40,6 +41,7 @@ contract MonCraft is IERC721Receiver, Ownable {
 
     /// TYPES
     struct Session {
+        uint256 id;
         Status status;
         bytes32 code; // this should be kept private
         uint256 currentStep;
@@ -58,7 +60,6 @@ contract MonCraft is IERC721Receiver, Ownable {
 
     /// STATE VARIABLES
     uint256 private s_seed;
-    bytes32 private s_roflAccessCode;
 
     uint256 public s_maxMonsters = 10;
     uint256 public s_probabilityAppearence = 20;
@@ -67,21 +68,24 @@ contract MonCraft is IERC721Receiver, Ownable {
     MonsterNFT public s_monsterNFT;
     MonsterNFT.Monster[] public s_monsters;
     mapping(bytes32 code => Session session) private s_codeSessions;
+    mapping(uint256 sessionId => bytes32 code) private s_sessionsIds;
     mapping(uint256 fightId => Fight fight) private s_fights;
     uint256 public s_fightsQty;
+    address public s_roflAddress;
+    bytes32 private s_roflAccessCode;
 
     /// EVENTS
-    event NewSession(bytes32 indexed sessionCode);
-    event MonsterCaptured(bytes32 indexed sessionCode, uint256 tokenId, bool captured);
-    event StepsSynced(bytes32 indexed sessionCode, uint256 currentStep);
-    event MonsterUpdated(bytes32 indexed sessionCode, uint256 newHP);
-    event MonsterReleased(bytes32 indexed sessionCode, uint256 tokenId);
-    event MonstersWithdrawn(bytes32 indexed sessionCode, address indexed player);
-    event MonstersImported(bytes32 indexed sessionCode, address indexed player);
+    event NewSession(uint256 indexed sessionId);
+    event MonsterCaptured(uint256 indexed sessionId, uint256 tokenId, bool captured);
+    event StepsSynced(uint256 indexed sessionId, uint256 currentStep);
+    event MonsterUpdated(uint256 indexed sessionId, uint256 newHP);
+    event MonsterReleased(uint256 indexed sessionId, uint256 tokenId);
+    event MonstersWithdrawn(uint256 indexed sessionId, address indexed player);
+    event MonstersImported(uint256 indexed sessionId, address indexed player);
     event FightCreated(uint256 indexed fightId);
-    event PlayerJoinedFight(bytes32 indexed sessionCode, uint256 playerNumber);
+    event PlayerJoinedFight(uint256 indexed fightId, uint256 indexed sessionId, uint256 playerNumber);
     event FightDamage(uint256 indexed fightId, uint256 damage);
-    event FightSynced(uint256 indexed tokenId);
+    event FightSynced(uint256 indexed fightId, uint256 tokenId);
 
     /// MODIFIERS
     modifier onlyROFL(bytes32 accesCode) {
@@ -104,6 +108,7 @@ contract MonCraft is IERC721Receiver, Ownable {
      * @param defenses The defense values for the monsters.
      * @param chancesOfAppearance Cumulative % chances of monster appearance.
      * @param chancesOfCapture % chances of capturing the monster once found.
+     * @param roflAddress The address of the ROFL contract authorized to control gameplay.
      * @param owner The address of the contract owner.
      */
     constructor(
@@ -114,6 +119,7 @@ contract MonCraft is IERC721Receiver, Ownable {
         uint256[] memory defenses,
         uint256[] memory chancesOfAppearance,
         uint256[] memory chancesOfCapture,
+        address roflAddress,
         address owner
     ) Ownable(owner) {
         if (
@@ -141,6 +147,7 @@ contract MonCraft is IERC721Receiver, Ownable {
 
         s_seed = uint256(bytes32(Sapphire.randomBytes(32, "")));
         s_monsterNFT = new MonsterNFT();
+        s_roflAddress = roflAddress;
     }
 
     // EXTERNAL FUNCTIONS
@@ -149,8 +156,10 @@ contract MonCraft is IERC721Receiver, Ownable {
      * @notice Allows the ROLF to start a new game
      * @notice The session mints the monster with index 0
      */
-    function startGame(bytes32 accessCode) external onlyROFL(accessCode) returns (bytes32 sessionCode) {
-        sessionCode = _generateCode();
+    function startGame(bytes32 accessCode) external onlyROFL(accessCode) returns (uint256 sessionId) {
+        bytes32 sessionCode = _generateCode();
+        sessionId = s_sessionsQty;
+
         Session storage session = s_codeSessions[sessionCode];
         session.code = sessionCode;
         session.currentStep = 0;
@@ -158,8 +167,10 @@ contract MonCraft is IERC721Receiver, Ownable {
         uint256 tokenId = s_monsterNFT.mint(address(this), s_monsters[0]);
         session.monstersTokenIds.push(tokenId);
         session.monsterTokenIdsExists[tokenId] = true;
+        session.id = sessionId;
+        s_sessionsIds[sessionId] = sessionCode;
         s_sessionsQty++;
-        emit NewSession(sessionCode);
+        emit NewSession(sessionId);
     }
 
     /**
@@ -179,7 +190,7 @@ contract MonCraft is IERC721Receiver, Ownable {
             revert MonCraft__CurrentStepIsLower();
         }
         s_codeSessions[sessionCode].currentStep = currentStep;
-        emit StepsSynced(sessionCode, currentStep);
+        emit StepsSynced(session.id, currentStep);
     }
 
     /**
@@ -218,7 +229,7 @@ contract MonCraft is IERC721Receiver, Ownable {
             session.monsterTokenIdsExists[tokenId] = true;
             captured = true;
         }
-        emit MonsterCaptured(sessionCode, monsterIndex, captured);
+        emit MonsterCaptured(session.id, monsterIndex, captured);
     }
 
     /**
@@ -241,7 +252,7 @@ contract MonCraft is IERC721Receiver, Ownable {
                 session.monstersTokenIds.pop();
                 s_monsterNFT.burn(tokenId);
                 session.monsterTokenIdsExists[tokenId] = false;
-                emit MonsterReleased(sessionCode, tokenId);
+                emit MonsterReleased(session.id, tokenId);
                 return;
             }
         }
@@ -292,7 +303,7 @@ contract MonCraft is IERC721Receiver, Ownable {
             s_monsterNFT.safeTransferFrom(address(this), player, tokenId);
         }
 
-        emit MonstersWithdrawn(sessionCode, player);
+        emit MonstersWithdrawn(session.id, player);
     }
 
     /**
@@ -322,7 +333,7 @@ contract MonCraft is IERC721Receiver, Ownable {
                 s_monsterNFT.safeTransferFrom(msg.sender, address(this), tokenIds[i]);
             }
         }
-        emit MonstersImported(sessionCode, msg.sender);
+        emit MonstersImported(session.id, msg.sender);
     }
 
     /**
@@ -350,7 +361,6 @@ contract MonCraft is IERC721Receiver, Ownable {
      * @param fightId Fight id
      * @param sessionCode Player joining session code
      * @param tokenId Monster token id that the user will use to fight
-     * @param accessCode ROFL access code
      * @dev This can only be called by ROFL
      */
     function joinFight(uint256 fightId, bytes32 sessionCode, uint256 tokenId, bytes32 accessCode)
@@ -382,7 +392,7 @@ contract MonCraft is IERC721Receiver, Ownable {
             fight.status = FightStatus.READY;
             player = 2;
         }
-        emit PlayerJoinedFight(sessionCode, player);
+        emit PlayerJoinedFight(fightId, session.id, player);
     }
 
     function syncFight(uint256 fightId, bytes32 winner, bytes32 accessCode) external onlyROFL(accessCode) {
@@ -409,7 +419,7 @@ contract MonCraft is IERC721Receiver, Ownable {
         } else {
             revert MonCraft__InvalidSessionCode();
         }
-        emit FightSynced(tokenId);
+        emit FightSynced(fightId, tokenId);
     }
 
     /**
@@ -436,6 +446,14 @@ contract MonCraft is IERC721Receiver, Ownable {
         s_maxMonsters = newMaxMonsters;
     }
 
+    /**
+     * @notice Updates the access code used by ROFL for gassless tx
+     * @param accessCode new access code
+     */
+    function updateROFLAccessCode(bytes32 accessCode) external onlyOwner {
+        s_roflAccessCode = accessCode;
+    }
+
     // PRIVATE & INTERNAL VIEW FUNCTIONS
 
     /**
@@ -447,11 +465,11 @@ contract MonCraft is IERC721Receiver, Ownable {
     }
 
     /**
-     * @notice Updates the access code used by ROFL for gassless tx
-     * @param accessCode new access code
+     * @notice Updates the ROFL address
+     * @param newROFLAddress The new ROFL address.
      */
-    function updateROFLAccessCode(bytes32 accessCode) external onlyOwner {
-        s_roflAccessCode = accessCode;
+    function updateROFLAddress(address newROFLAddress) external onlyOwner {
+        s_roflAddress = newROFLAddress;
     }
 
     // PUBLIC & EXTERNAL VIEW FUNCTIONS
@@ -463,7 +481,12 @@ contract MonCraft is IERC721Receiver, Ownable {
      * @return monsterIndex The index of the monster tha appears.
      * @return appeared Whether a monster appears at this step.
      */
-    function checkStep(bytes32 sessionCode, uint256 playerStep) external view returns (uint256, bool) {
+    function checkStep(bytes32 sessionCode, uint256 playerStep, bytes32 accessCode)
+        external
+        view
+        onlyROFL(accessCode)
+        returns (uint256, bool)
+    {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
@@ -494,9 +517,10 @@ contract MonCraft is IERC721Receiver, Ownable {
      * @return monstersTokenIds ids for TokenIds owned by the player's session
      * @dev Returns the public information from the session only
      */
-    function getSessionInformation(bytes32 sessionCode)
+    function getSessionInformation(bytes32 sessionCode, bytes32 accessCode)
         external
         view
+        onlyROFL(accessCode)
         returns (uint256 status, uint256 currentStep, uint256[] memory monstersTokenIds)
     {
         Session storage session = s_codeSessions[sessionCode];
@@ -515,9 +539,10 @@ contract MonCraft is IERC721Receiver, Ownable {
      * @return status fight status
      *
      */
-    function getFightInformation(uint256 fightId)
+    function getFightInformation(uint256 fightId, bytes32 accessCode)
         external
         view
+        onlyROFL(accessCode)
         returns (uint256 monsterOneTokenId, uint256 monsterTwoTokenId, FightStatus status)
     {
         Fight storage fight = s_fights[fightId];
@@ -530,7 +555,12 @@ contract MonCraft is IERC721Receiver, Ownable {
      * @param sessionCode Player joining session code
      * @return damage Damage that the monster will cause to the other monster
      */
-    function getFightDamage(uint256 fightId, bytes32 sessionCode) external view returns (uint256 damage) {
+    function getFightDamage(uint256 fightId, bytes32 sessionCode, bytes32 accessCode)
+        external
+        view
+        onlyROFL(accessCode)
+        returns (uint256 damage)
+    {
         Fight storage fight = s_fights[fightId];
         if (fight.status != FightStatus.READY) {
             revert MonCraft__FightNotReady();
@@ -552,5 +582,19 @@ contract MonCraft is IERC721Receiver, Ownable {
         }
         damage = uint256(keccak256(abi.encodePacked(s_seed, sessionCode, fightId, monsterTokenId, block.timestamp)))
             % (maxDamage + 1);
+    }
+
+    /**
+     * @notice Returns the session code
+     * @param sessionId player's session id
+     * @param accessCode access code
+     */
+    function getSessionCode(uint256 sessionId, bytes32 accessCode)
+        external
+        view
+        onlyROFL(accessCode)
+        returns (bytes32 sessionCode)
+    {
+        sessionCode = s_sessionsIds[sessionId];
     }
 }
