@@ -22,6 +22,9 @@ Each Monster is represented as an NFT with unique attributes such as HP, attack 
 
 To prevent abuse (e.g., rerolling movements to force favorable outcomes), player movements are kept off-chain until a decision point, minimizing the attack surface while preserving game feel.
 
+
+In the following diagram, you can see how the moves are persisted only in ROFL until the player attempts to catch a Monster. At that point, the moves are synced on-chain and the NFT is minted.
+
 ![Moves flow](./images/moves.png)
 
 ### Game Sessions
