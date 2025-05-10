@@ -220,7 +220,7 @@ contract MonCraft is IERC721Receiver, Ownable {
         session.currentStep = currentStep;
 
         uint256 percentage =
-            uint256(keccak256(abi.encodePacked(s_seed, session.code, currentStep, monsterIndex, block.timestamp))) % 100;
+            uint256(keccak256(abi.encode(s_seed, session.code, currentStep, monsterIndex, block.timestamp))) % 100;
 
         bool captured;
         if (percentage <= monster.chancesOfCapture) {
@@ -395,7 +395,10 @@ contract MonCraft is IERC721Receiver, Ownable {
         emit PlayerJoinedFight(fightId, session.id, player);
     }
 
-    function syncFight(uint256 fightId, bytes32 winner, bytes32 accessCode) external onlyROFL(accessCode) {
+    function syncFight(uint256 fightId, bytes32 winner, uint256 winnerHPLeft, bytes32 accessCode)
+        external
+        onlyROFL(accessCode)
+    {
         Fight storage fight = s_fights[fightId];
         if (fight.status != FightStatus.READY) {
             revert MonCraft__FightNotReady();
@@ -409,12 +412,14 @@ contract MonCraft is IERC721Receiver, Ownable {
 
         uint256 tokenId;
         if (winner == fight.sessionCodeOne) {
-            tokenId = fight.monsterOneTokenId;
-            s_monsterNFT.burn(tokenId);
-            session.monsterTokenIdsExists[tokenId] = false;
-        } else if (winner == fight.sessionCodeTwo) {
             tokenId = fight.monsterTwoTokenId;
             s_monsterNFT.burn(tokenId);
+            s_monsterNFT.updateHP(fight.monsterOneTokenId, winnerHPLeft);
+            session.monsterTokenIdsExists[tokenId] = false;
+        } else if (winner == fight.sessionCodeTwo) {
+            tokenId = fight.monsterOneTokenId;
+            s_monsterNFT.burn(tokenId);
+            s_monsterNFT.updateHP(fight.monsterTwoTokenId, winnerHPLeft);
             session.monsterTokenIdsExists[tokenId] = false;
         } else {
             revert MonCraft__InvalidSessionCode();
@@ -461,7 +466,7 @@ contract MonCraft is IERC721Receiver, Ownable {
      * @return generated code
      */
     function _generateCode() private view returns (bytes32) {
-        return keccak256(abi.encodePacked(s_seed, s_sessionsQty, block.timestamp));
+        return keccak256(abi.encode(s_seed, s_sessionsQty, block.timestamp));
     }
 
     /**
@@ -492,7 +497,7 @@ contract MonCraft is IERC721Receiver, Ownable {
             revert MonCraft__SessionDoesNotExist();
         }
 
-        bytes32 hashAppearance = keccak256(abi.encodePacked(s_seed, sessionCode, playerStep, block.timestamp));
+        bytes32 hashAppearance = keccak256(abi.encode(s_seed, sessionCode, playerStep, block.timestamp));
         bytes32 hashMonster = keccak256(abi.encode(hashAppearance));
 
         uint256 percentageAppearance = uint256(hashAppearance) % 100;
@@ -571,10 +576,10 @@ contract MonCraft is IERC721Receiver, Ownable {
         uint256 attackDamageTwo = s_monsterNFT.getMonsterAttackDamage(fight.monsterTwoTokenId);
 
         damagePlayerOne = uint256(
-            keccak256(abi.encodePacked(s_seed, fight.sessionCodeOne, fightId, fight.monsterOneTokenId, block.timestamp))
+            keccak256(abi.encode(s_seed, fight.sessionCodeOne, fightId, fight.monsterOneTokenId, block.timestamp))
         ) % (attackDamageOne + 1);
         damagePlayerTwo = uint256(
-            keccak256(abi.encodePacked(s_seed, fight.sessionCodeTwo, fightId, fight.monsterTwoTokenId, block.timestamp))
+            keccak256(abi.encode(s_seed, fight.sessionCodeTwo, fightId, fight.monsterTwoTokenId, block.timestamp))
         ) % (attackDamageTwo + 1);
     }
 

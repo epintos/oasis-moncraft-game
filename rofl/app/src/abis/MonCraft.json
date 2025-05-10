@@ -900,6 +900,11 @@
         "type": "bytes32"
       },
       {
+        "internalType": "uint256",
+        "name": "winnerHPLeft",
+        "type": "uint256"
+      },
+      {
         "internalType": "bytes32",
         "name": "accessCode",
         "type": "bytes32"
