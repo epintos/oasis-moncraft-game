@@ -1,5 +1,7 @@
 # Oasis MonCraft
 
+<img src="./images/logo.webp" alt="Logo" width="200"/>
+
 ## Introduction
 
 **Oasis MonCraft** is a project built for the 2025 ETHDam Hackathon. It’s a retro-inspired, top-down RPG where players explore a grid-based world, encounter wild Monsters, and attempt to catch them — blending on-chain privacy with real-time gameplay.
@@ -20,7 +22,7 @@ Each Monster is represented as an NFT with unique attributes such as HP, attack 
 
 To prevent abuse (e.g., rerolling movements to force favorable outcomes), player movements are kept off-chain until a decision point, minimizing the attack surface while preserving game feel.
 
-![Moves flow](./imgs/moves.png)
+![Moves flow](./images/moves.png)
 
 ### Game Sessions
 
