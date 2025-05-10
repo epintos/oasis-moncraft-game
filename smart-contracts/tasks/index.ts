@@ -32,7 +32,7 @@ task("deploy").setAction(async (_args, hre) => {
     "ipfs://bafybeih3cby5hlphdlxjq7gjslqowohcccwuhxn6eday5ar6x6qgw6fx3a",
   ];
 
-  const initialHPs = [180, 120, 200, 160, 130, 100, 140, 110, 90, 220];
+  const initialHPs = [260, 240, 400, 320, 260, 200, 280, 220, 180, 440];
   const attackDamages = [90, 70, 100, 85, 95, 40, 75, 85, 60, 110];
   const defenses = [80, 60, 90, 70, 55, 30, 80, 65, 40, 100];
   const chancesOfAppearance = [30, 50, 61, 71, 79, 86, 92, 96, 99, 100];
