@@ -5,12 +5,13 @@ pragma solidity ^0.8.28;
 import {Sapphire} from "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
 import {MonsterNFT} from "./MonsterNFT.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title MonCraft
  * @author @epintos, @federava
  */
-contract MonCraft is IERC721Receiver {
+contract MonCraft is IERC721Receiver, Ownable {
     /// ERRORS
     error MonCraft__InvalidMonstersLength();
     error MonCraft__AlreadyMaxMonsters();
@@ -22,7 +23,6 @@ contract MonCraft is IERC721Receiver {
     error MonCraft__SessionDoesNotHaveTokenId();
     error MonCraft__MonsterDoesNotExist();
     error MonCraft__TransferFailed();
-    error MonCraft__NotOwner();
     error MonCraft__PlayerCannotJoinFight();
     error MonCraft__FightNotReady();
 
@@ -65,7 +65,6 @@ contract MonCraft is IERC721Receiver {
     uint256 public s_probabilityAttack = 40;
     address public s_roflAddress;
     uint256 public s_sessionsQty;
-    address private s_owner;
     MonsterNFT public s_monsterNFT;
     MonsterNFT.Monster[] public s_monsters;
     mapping(bytes32 code => Session session) private s_codeSessions;
@@ -93,12 +92,6 @@ contract MonCraft is IERC721Receiver {
         _;
     }
 
-    modifier onlyOwner() {
-        if (msg.sender != s_owner) {
-            revert MonCraft__NotOwner();
-        }
-        _;
-    }
     /// FUNCTIONS
 
     // CONSTRUCTOR
@@ -124,7 +117,7 @@ contract MonCraft is IERC721Receiver {
         uint256[] memory chancesOfCapture,
         address roflAddress,
         address owner
-    ) {
+    ) Ownable(owner) {
         if (
             names.length != imageURIs.length || names.length != initialHPs.length
                 || names.length != attackDamages.length || names.length != defenses.length
@@ -151,7 +144,6 @@ contract MonCraft is IERC721Receiver {
         s_seed = uint256(bytes32(Sapphire.randomBytes(32, "")));
         s_monsterNFT = new MonsterNFT();
         s_roflAddress = roflAddress;
-        s_owner = owner;
     }
 
     // EXTERNAL FUNCTIONS
