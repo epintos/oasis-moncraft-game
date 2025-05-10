@@ -571,10 +571,10 @@ contract MonCraft is IERC721Receiver, Ownable {
         uint256 attackDamageTwo = s_monsterNFT.getMonsterAttackDamage(fight.monsterTwoTokenId);
 
         damagePlayerOne = uint256(
-            keccak256(abi.encodePacked(s_seed, sessionCode, fightId, fight.monsterOneTokenId, block.timestamp))
+            keccak256(abi.encodePacked(s_seed, fight.sessionCodeOne, fightId, fight.monsterOneTokenId, block.timestamp))
         ) % (attackDamageOne + 1);
         damagePlayerTwo = uint256(
-            keccak256(abi.encodePacked(s_seed, sessionCode, fightId, fight.monsterTwoTokenId, block.timestamp))
+            keccak256(abi.encodePacked(s_seed, fight.sessionCodeTwo, fightId, fight.monsterTwoTokenId, block.timestamp))
         ) % (attackDamageTwo + 1);
     }
 
