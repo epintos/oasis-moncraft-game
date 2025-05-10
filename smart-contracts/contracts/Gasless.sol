@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {encryptCallData} from "@oasisprotocol/sapphire-contracts/contracts/CalldataEncryption.sol";
 import {EIP155Signer} from "@oasisprotocol/sapphire-contracts/contracts/EIP155Signer.sol";
+import {EthereumUtils} from "@oasisprotocol/sapphire-contracts/contracts/EthereumUtils.sol";
 
 /**
  * @title Gasless
@@ -21,10 +22,12 @@ contract Gasless {
 
     EthereumKeypair private s_keyPair;
 
-    constructor(EthereumKeypair memory keyPair) payable {
-        s_keyPair = keyPair;
+    constructor() payable {
+        (address addr, bytes32 secret) = EthereumUtils.generateKeypair();
+        s_keyPair = EthereumKeypair({addr: addr, secret: secret, nonce: 0});
+
         if (msg.value > 0) {
-            (bool success,) = payable(s_keyPair.addr).call{value: msg.value}("");
+            (bool success,) = payable(addr).call{value: msg.value}("");
             if (!success) {
                 revert Gasless__FundingFailed();
             }
@@ -39,7 +42,7 @@ contract Gasless {
             EIP155Signer.EthTx({
                 nonce: s_keyPair.nonce,
                 gasPrice: 100_000_000_000,
-                gasLimit: 250000,
+                gasLimit: 250_000,
                 to: address(this),
                 value: 0,
                 data: encryptCallData(abi.encodeCall(this.proxy, data)),
