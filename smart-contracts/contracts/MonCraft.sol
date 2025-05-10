@@ -335,11 +335,6 @@ contract MonCraft is IERC721Receiver {
         s_roflAddress = newROFLAddress;
     }
 
-    /**
-     * @notice Needed to fund the contract for gassless tx
-     */
-    receive() external payable {}
-
     // PRIVATE & INTERNAL VIEW FUNCTIONS
 
     /**
