@@ -515,20 +515,21 @@ contract MonCraft is IERC721Receiver, Ownable {
      * @return status session status
      * @return currentStep current player's step
      * @return monstersTokenIds ids for TokenIds owned by the player's session
+     * @return sessionId session Id.
      * @dev Returns the public information from the session only
      */
     function getSessionInformation(bytes32 sessionCode, bytes32 accessCode)
         external
         view
         onlyROFL(accessCode)
-        returns (uint256 status, uint256 currentStep, uint256[] memory monstersTokenIds)
+        returns (uint256 status, uint256 currentStep, uint256[] memory monstersTokenIds, uint256 sessionId)
     {
         Session storage session = s_codeSessions[sessionCode];
 
         // Copy from storage to memory
         uint256[] memory tokens = session.monstersTokenIds;
 
-        return (uint256(session.status), session.currentStep, tokens);
+        return (uint256(session.status), session.currentStep, tokens, session.id);
     }
 
     /**
