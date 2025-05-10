@@ -1,5 +1,7 @@
 import dotenv from "dotenv";
+import { toUtf8Bytes } from "ethers";
 import { task } from "hardhat/config";
+
 dotenv.config();
 
 task("deploy").setAction(async (_args, hre) => {
@@ -37,14 +39,29 @@ task("deploy").setAction(async (_args, hre) => {
   const chancesOfAppearance = [30, 50, 61, 71, 79, 86, 92, 96, 99, 100];
   const chancesOfCapture = [80, 15, 70, 65, 30, 55, 40, 30, 20, 30];
 
-  let roflSignerAddress;
+  let roflSignerAddress, gaslessSignerAddress, gaslessSignerSecret;
+
   if (hre.network.name === "sapphire-localnet") {
     roflSignerAddress = process.env.LOCAL_ROFL_SIGNER_ADDRESS;
+    gaslessSignerAddress = process.env.LOCAL_GASLESS_SIGNER_ADDRESS;
+    gaslessSignerSecret = process.env.LOCAL_GASLESS_SIGNER_SECRET
   } else if (hre.network.name === "sapphire-testnet") {
     roflSignerAddress = process.env.TESTNET_ROFL_SIGNER_ADDRESS;
+    gaslessSignerAddress = process.env.TESTNET_GASLESS_SIGNER_ADDRESS;
+    gaslessSignerSecret = process.env.TESTNET_GASLESS_SIGNER_SECRET
   } else {
     roflSignerAddress = process.env.ROFL_SIGNER_ADDRESS;
+    gaslessSignerAddress = process.env.GASLESS_SIGNER_ADDRESS;
+    gaslessSignerSecret = process.env.GASLESS_SIGNER_SECRET
   }
+
+  const provider = hre.ethers.provider;
+  const currentNonce = await provider.getTransactionCount(gaslessSignerAddress!);
+  const Gasless = await hre.ethers.getContractFactory("Gasless");
+  const gasless = await Gasless.deploy([gaslessSignerAddress, gaslessSignerSecret, currentNonce]);
+  await gasless.waitForDeployment();
+
+  console.log("✅ Gasless address", gasless.target);
 
   const MonCraft = await hre.ethers.getContractFactory("MonCraft");
   const monCraft = await MonCraft.deploy(
@@ -60,6 +77,10 @@ task("deploy").setAction(async (_args, hre) => {
   );
   const monCraftAddr = await monCraft.waitForDeployment();
 
-  console.log(`MonCraft address: ${monCraftAddr.target}`);
+  const accessCodeBytes = toUtf8Bytes(process.env.ROFL_ACCESS_CODE!);
+  const tx = await monCraft.updateROFLAccessCode(accessCodeBytes);
+  await tx.wait();
+
+  console.log(`✅ MonCraft address: ${monCraftAddr.target}`);
   return monCraftAddr.target;
 });

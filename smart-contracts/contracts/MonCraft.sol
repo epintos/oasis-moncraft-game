@@ -15,7 +15,7 @@ contract MonCraft is IERC721Receiver {
     error MonCraft__InvalidMonstersLength();
     error MonCraft__AlreadyMaxMonsters();
     error MonCraft__SessionDoesNotExist();
-    error MonCraft__NotROLFAddress();
+    error MonCraft__NotValidAccessCode();
     error MonCraft__ReceiverIsNotCurrentContract();
     error MonCraft__InvalidSessionCode();
     error MonCraft__CurrentStepIsLower();
@@ -32,7 +32,7 @@ contract MonCraft is IERC721Receiver {
     /// TYPES
     struct Session {
         Status status;
-        bytes32 code;
+        bytes32 code; // this should be kept private
         uint256 currentStep;
         uint256[] monstersTokenIds;
         mapping(uint256 monsterTokenId => bool exists) monsterTokenIdsExists;
@@ -40,6 +40,7 @@ contract MonCraft is IERC721Receiver {
 
     /// STATE VARIABLES
     uint256 private s_seed;
+    bytes32 private s_roflAccessCode;
 
     uint256 public s_maxMonsters = 10;
     uint256 public s_probabilityAppearence = 20;
@@ -48,7 +49,7 @@ contract MonCraft is IERC721Receiver {
     address private s_owner;
     MonsterNFT public s_monsterNFT;
     MonsterNFT.Monster[] public s_monsters;
-    mapping(bytes32 code => Session session) public s_codeSessions;
+    mapping(bytes32 code => Session session) private s_codeSessions;
 
     /// EVENTS
     event NewSession(bytes32 indexed sessionCode);
@@ -60,9 +61,9 @@ contract MonCraft is IERC721Receiver {
     event MonstersImported(bytes32 indexed sessionCode, address indexed player);
 
     /// MODIFIERS
-    modifier onlyROFL() {
-        if (msg.sender != s_roflAddress) {
-            revert MonCraft__NotROLFAddress();
+    modifier onlyROFL(bytes32 accesCode) {
+        if (accesCode != s_roflAccessCode) {
+            revert MonCraft__NotValidAccessCode();
         }
         _;
     }
@@ -134,7 +135,7 @@ contract MonCraft is IERC721Receiver {
      * @notice Allows the ROLF to start a new game
      * @notice The session mints the monster with index 0
      */
-    function startGame() external onlyROFL returns (bytes32 sessionCode) {
+    function startGame(bytes32 accessCode) external onlyROFL(accessCode) returns (bytes32 sessionCode) {
         sessionCode = _generateCode();
         Session storage session = s_codeSessions[sessionCode];
         session.code = sessionCode;
@@ -152,7 +153,10 @@ contract MonCraft is IERC721Receiver {
      * @param sessionCode The session identifier.
      * @param currentStep The new current step to sync.
      */
-    function syncCurrentStep(bytes32 sessionCode, uint256 currentStep) external onlyROFL {
+    function syncCurrentStep(bytes32 sessionCode, uint256 currentStep, bytes32 accessCode)
+        external
+        onlyROFL(accessCode)
+    {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
@@ -170,7 +174,10 @@ contract MonCraft is IERC721Receiver {
      * @param monsterIndex monster that appears and the player can capture
      * @param currentStep The current player's step
      */
-    function captureMonster(bytes32 sessionCode, uint256 monsterIndex, uint256 currentStep) external onlyROFL {
+    function captureMonster(bytes32 sessionCode, uint256 monsterIndex, uint256 currentStep, bytes32 accessCode)
+        external
+        onlyROFL(accessCode)
+    {
         if (monsterIndex >= s_monsters.length) {
             revert MonCraft__MonsterDoesNotExist();
         }
@@ -208,7 +215,7 @@ contract MonCraft is IERC721Receiver {
      * @notice This method is used when the user reaches the maxMonsters and wants to release a monster
      * to capture a new one
      */
-    function releaseMonster(bytes32 sessionCode, uint256 tokenId) external onlyROFL {
+    function releaseMonster(bytes32 sessionCode, uint256 tokenId, bytes32 accessCode) external onlyROFL(accessCode) {
         Session storage session = s_codeSessions[sessionCode];
         if (session.status != Status.IN_PROGRESS) {
             revert MonCraft__SessionDoesNotExist();
@@ -328,6 +335,11 @@ contract MonCraft is IERC721Receiver {
         s_roflAddress = newROFLAddress;
     }
 
+    /**
+     * @notice Needed to fund the contract for gassless tx
+     */
+    receive() external payable {}
+
     // PRIVATE & INTERNAL VIEW FUNCTIONS
 
     /**
@@ -336,6 +348,14 @@ contract MonCraft is IERC721Receiver {
      */
     function _generateCode() private view returns (bytes32) {
         return keccak256(abi.encodePacked(s_seed, s_sessionsQty, block.timestamp));
+    }
+
+    /**
+     * @notice Updates the access code used by ROFL for gassless tx
+     * @param accessCode new access code
+     */
+    function updateROFLAccessCode(bytes32 accessCode) external onlyOwner {
+        s_roflAccessCode = accessCode;
     }
 
     // PUBLIC & EXTERNAL VIEW FUNCTIONS
@@ -371,11 +391,19 @@ contract MonCraft is IERC721Receiver {
     }
 
     /**
-     * @notice Needed because the session struct does not return this array.
-     * @param sessionCode The session identifier.
-     * @return monstersTokenIds The array of monsters.
+     * @notices Returns a session's public information
+     * @param sessionCode session identifier
+     * @return status session status
+     * @return currentStep current player's step
+     * @return monstersTokenIds ids for TokenIds owned by the player's session
+     * @dev Returns the public information from the session only
      */
-    function getMonstersTokenIds(bytes32 sessionCode) public view returns (uint256[] memory) {
-        return s_codeSessions[sessionCode].monstersTokenIds;
+    function getSessionInformation(bytes32 sessionCode)
+        public
+        view
+        returns (uint256 status, uint256 currentStep, uint256[] monstersTokenIds)
+    {
+        Session storage session = s_codeSessions[sessionCode];
+        return (session.status, session.currentStep, session.monstersTokenIds);
     }
 }
