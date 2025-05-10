@@ -1,7 +1,7 @@
 const express = require('express');
 const WebSocket = require('ws');
 require('dotenv').config();
-const { sendNativeToken, startGame, checkStep, getSession, saveGame, captureMonster, getCapturedMonsters } = require('./blockchain');
+const { startGame, checkStep, getSession, saveGame, captureMonster, getCapturedMonsters } = require('./blockchain');
 
 const app = express();
 const server = app.listen(process.env.PORT, () =>
@@ -56,10 +56,6 @@ wss.on('connection', (ws) => {
         } else if (data.type === 'captureMonster') {
           const result = await captureMonster(ws.session.sessionCode, data.monsterIndex, ws.session.playerStep);
           response = { type: 'captureMonsterResult', ...result };
-  
-        } else if (data.type === 'getCapturedMonsters') {
-          const result = await getCapturedMonsters(ws.session.sessionCode);
-          response = { type: 'getCapturedMonstersResult', ...result };
   
         } else {
           response = {
