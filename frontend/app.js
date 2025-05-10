@@ -2,6 +2,8 @@ const ws = new WebSocket('ws://localhost:8080');
 
 let playerStep = 0;
 let sessionCode = '';
+let sessionId = '';
+let isBusy = false;
 
 ws.onopen = () => {
   document.getElementById('output').textContent = 'Connected to WebSocket server';
@@ -48,10 +50,19 @@ ws.onmessage = (event) => {
         // Request updated session info
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({
-            type: 'loadGame', // or "getSession" if you renamed it
+            type: 'loadGame',
             sessionCode
           }));
         }
+    }
+
+    if (data.type === 'releaseMonsterResult' && data.success) {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'loadGame',
+          sessionCode
+        }));
+      }
     }
       
   } catch (error) {
@@ -66,26 +77,6 @@ ws.onclose = () => {
 ws.onerror = (error) => {
   document.getElementById('output').textContent = `WebSocket error: ${error.message || 'Unknown error'}`;
 };
-
-function sendTransaction() {
-  const toAddress = document.getElementById('toAddress').value.trim();
-  const amount = document.getElementById('amount').value.trim();
-
-  if (!toAddress || !amount) {
-    document.getElementById('output').textContent = 'Please enter address and amount';
-    return;
-  }
-
-  if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({
-      type: 'sendNativeToken',
-      toAddress,
-      amount,
-    }));
-  } else {
-    document.getElementById('output').textContent = 'WebSocket is not connected';
-  }
-}
 
 function startSession() {
   if (ws.readyState === WebSocket.OPEN) {
@@ -149,19 +140,33 @@ function saveGame() {
 }
 
 function renderMonsterList(monsters) {
-    const list = document.getElementById('monsterList');
-    list.innerHTML = '';
-  
-    if (!monsters || monsters.length === 0) {
-      list.innerHTML = '<li>None</li>';
-      return;
-    }
-  
-    monsters.forEach((id) => {
-      const li = document.createElement('li');
-      li.textContent = `Monster #${id}`;
-      list.appendChild(li);
-    });
+  const list = document.getElementById('monsterList');
+  list.innerHTML = '';
+
+  if (!monsters || monsters.length === 0) {
+    list.innerHTML = '<li>None</li>';
+    return;
+  }
+
+  monsters.forEach((id) => {
+    const li = document.createElement('li');
+    li.textContent = `Monster #${id} `;
+
+    const releaseButton = document.createElement('button');
+    releaseButton.textContent = 'Release';
+    releaseButton.onclick = () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'releaseMonster',
+          sessionCode,
+          tokenId: parseInt(id),
+        }));
+      }
+    };
+
+    li.appendChild(releaseButton);
+    list.appendChild(li);
+  });
 }
 
 const gridSize = 11;
