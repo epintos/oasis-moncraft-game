@@ -30,10 +30,57 @@ To lower the barrier to entry, the game supports **gasless gameplay**: no wallet
 
 Advanced users can optionally link their wallet and withdraw their Monster NFTs to trade, transfer, or import them into other game sessions.
 
-### Repo structure
+## Repo structure
 
+We have a monorepo structure with the following components:
 
 - [Frontend](./frontend): Includes the game UI
 - [Smart Contracts](./smart-contracts): Includes the Smart Contracts using Hardhat
 - [ROFL](./rofl): Includes the Oasis ROFL implementation
 
+## Usefull commands
+
+### Install dependencies
+
+We are using pnpm in each mono repo:
+
+```bash
+  pnpm install
+```
+
+### Envs
+
+```bash
+  cp .env.example .env
+```
+
+and complete the missing values.
+
+### Compile
+
+```bash
+  pnpm hardhat compile
+```
+
+### Deploy
+
+The following compile and deploy to the different networks:
+
+```bash
+  pnpm deploy-local
+```
+
+```bash
+  pnpm deploy-tesnet
+```
+
+### Generate ABIs
+
+```bash
+  pnpm generate-abi
+```
+
+
+### Contributors
+
+Developed by [@epintos](https://github.com/epintos) and [@federava](https://github.com/federava).
