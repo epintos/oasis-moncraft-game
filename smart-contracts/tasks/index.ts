@@ -75,6 +75,9 @@ task("deploy").setAction(async (_args, hre) => {
   const tx = await monCraft.updateROFLAccessCode(accessCodeBytes);
   await tx.wait();
 
+  const monsterNFTAddress = await monCraft.s_monsterNFT();
+
   console.log(`✅ MonCraft address: ${monCraftAddr.target}`);
+  console.log(`✅ MonsterNFT address: ${monsterNFTAddress}`);
   return monCraftAddr.target;
 });
