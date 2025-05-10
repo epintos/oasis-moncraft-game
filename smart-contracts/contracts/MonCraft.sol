@@ -63,7 +63,6 @@ contract MonCraft is IERC721Receiver, Ownable {
     uint256 public s_maxMonsters = 10;
     uint256 public s_probabilityAppearence = 20;
     uint256 public s_probabilityAttack = 40;
-    address public s_roflAddress;
     uint256 public s_sessionsQty;
     MonsterNFT public s_monsterNFT;
     MonsterNFT.Monster[] public s_monsters;
@@ -95,6 +94,7 @@ contract MonCraft is IERC721Receiver, Ownable {
     /// FUNCTIONS
 
     // CONSTRUCTOR
+
     /**
      *
      * @param names The names of the monsters.
@@ -104,7 +104,6 @@ contract MonCraft is IERC721Receiver, Ownable {
      * @param defenses The defense values for the monsters.
      * @param chancesOfAppearance Cumulative % chances of monster appearance.
      * @param chancesOfCapture % chances of capturing the monster once found.
-     * @param roflAddress The address of the ROFL contract authorized to control gameplay.
      * @param owner The address of the contract owner.
      */
     constructor(
@@ -115,7 +114,6 @@ contract MonCraft is IERC721Receiver, Ownable {
         uint256[] memory defenses,
         uint256[] memory chancesOfAppearance,
         uint256[] memory chancesOfCapture,
-        address roflAddress,
         address owner
     ) Ownable(owner) {
         if (
@@ -143,7 +141,6 @@ contract MonCraft is IERC721Receiver, Ownable {
 
         s_seed = uint256(bytes32(Sapphire.randomBytes(32, "")));
         s_monsterNFT = new MonsterNFT();
-        s_roflAddress = roflAddress;
     }
 
     // EXTERNAL FUNCTIONS
@@ -437,14 +434,6 @@ contract MonCraft is IERC721Receiver, Ownable {
      */
     function updateMaxMonsters(uint256 newMaxMonsters) external onlyOwner {
         s_maxMonsters = newMaxMonsters;
-    }
-
-    /**
-     * @notice Updates the ROFL address
-     * @param newROFLAddress The new ROFL address.
-     */
-    function updateROFLAddress(address newROFLAddress) external onlyOwner {
-        s_roflAddress = newROFLAddress;
     }
 
     // PRIVATE & INTERNAL VIEW FUNCTIONS

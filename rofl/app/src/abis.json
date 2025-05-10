@@ -38,11 +38,6 @@
       },
       {
         "internalType": "address",
-        "name": "roflAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "owner",
         "type": "address"
       }
@@ -755,19 +750,6 @@
   },
   {
     "inputs": [],
-    "name": "s_roflAddress",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "s_sessionsQty",
     "outputs": [
       {
@@ -905,19 +887,6 @@
       }
     ],
     "name": "updateROFLAccessCode",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newROFLAddress",
-        "type": "address"
-      }
-    ],
-    "name": "updateROFLAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

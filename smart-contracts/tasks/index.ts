@@ -39,16 +39,6 @@ task("deploy").setAction(async (_args, hre) => {
   const chancesOfAppearance = [30, 50, 61, 71, 79, 86, 92, 96, 99, 100];
   const chancesOfCapture = [80, 15, 70, 65, 30, 55, 40, 30, 20, 30];
 
-  let roflSignerAddress;
-
-  if (hre.network.name === "sapphire-localnet") {
-    roflSignerAddress = process.env.LOCAL_ROFL_SIGNER_ADDRESS;
-  } else if (hre.network.name === "sapphire-testnet") {
-    roflSignerAddress = process.env.TESTNET_ROFL_SIGNER_ADDRESS;
-  } else {
-    roflSignerAddress = process.env.ROFL_SIGNER_ADDRESS;
-  }
-
   const Gasless = await hre.ethers.getContractFactory("Gasless");
   const gasless = await Gasless.deploy({
     gasLimit: 5_000_000,
@@ -67,7 +57,6 @@ task("deploy").setAction(async (_args, hre) => {
     defenses,
     chancesOfAppearance,
     chancesOfCapture,
-    roflSignerAddress,
     deployerAddress
   );
   const monCraftAddr = await monCraft.waitForDeployment();
