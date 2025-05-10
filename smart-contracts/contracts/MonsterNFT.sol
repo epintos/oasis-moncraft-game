@@ -31,8 +31,8 @@ contract MonsterNFT is ERC721, Ownable {
     function mint(address to, Monster memory monster) external onlyOwner returns (uint256) {
         uint256 tokenId = s_totalSupply;
         s_monsters[tokenId] = monster;
-        _safeMint(to, tokenId);
         s_totalSupply++;
+        _safeMint(to, tokenId);
         return tokenId;
     }
 
