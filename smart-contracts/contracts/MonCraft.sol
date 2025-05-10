@@ -553,14 +553,14 @@ contract MonCraft is IERC721Receiver, Ownable {
     /**
      * @notice Returns a random attack damage
      * @param fightId Fight id
-     * @param sessionCode Player joining session code
-     * @return damage Damage that the monster will cause to the other monster
+     * @return damagePlayerOne Damage of the Monster 1
+     * @return damagePlayerTwo Damage of the Monster 2
      */
-    function getFightDamage(uint256 fightId, bytes32 sessionCode, bytes32 accessCode)
+    function getFightDamage(uint256 fightId, bytes32 accessCode)
         external
         view
         onlyROFL(accessCode)
-        returns (uint256 damage)
+        returns (uint256 damagePlayerOne, uint256 damagePlayerTwo)
     {
         Fight storage fight = s_fights[fightId];
         if (fight.status != FightStatus.READY) {
@@ -570,19 +570,12 @@ contract MonCraft is IERC721Receiver, Ownable {
         uint256 attackDamageOne = s_monsterNFT.getMonsterAttackDamage(fight.monsterOneTokenId);
         uint256 attackDamageTwo = s_monsterNFT.getMonsterAttackDamage(fight.monsterTwoTokenId);
 
-        uint256 monsterTokenId;
-        uint256 maxDamage;
-        if (sessionCode == fight.sessionCodeOne) {
-            monsterTokenId = fight.monsterOneTokenId;
-            maxDamage = attackDamageOne;
-        } else if (sessionCode == fight.sessionCodeTwo) {
-            monsterTokenId = fight.monsterTwoTokenId;
-            maxDamage = attackDamageTwo;
-        } else {
-            revert MonCraft__InvalidSessionCode();
-        }
-        damage = uint256(keccak256(abi.encodePacked(s_seed, sessionCode, fightId, monsterTokenId, block.timestamp)))
-            % (maxDamage + 1);
+        damagePlayerOne = uint256(
+            keccak256(abi.encodePacked(s_seed, sessionCode, fightId, fight.monsterOneTokenId, block.timestamp))
+        ) % (attackDamageOne + 1);
+        damagePlayerTwo = uint256(
+            keccak256(abi.encodePacked(s_seed, sessionCode, fightId, fight.monsterTwoTokenId, block.timestamp))
+        ) % (attackDamageTwo + 1);
     }
 
     /**

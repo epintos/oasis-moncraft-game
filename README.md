@@ -33,6 +33,12 @@ To lower the barrier to entry, the game supports **gasless gameplay**: no wallet
 
 Advanced users can optionally link their wallet and withdraw their Monster NFTs to trade, transfer, or import them into other game sessions.
 
+### Fights
+
+A game admin can create a fight between two sessions. Each player can join the fight by selecting a Monster from their inventory. Once both players have joined, the fight takes place off-chain in ROFL. ROFL calls a view function that returns random damage caused by each Monster. It then simulates multiple rounds automatically until one Monster's HP reaches zero. When that happens, the winner is synced on-chain, and the losing Monster's NFT is burned.
+
+![Moves flow](./images/fight.png)
+
 ## Repo structure
 
 We have a monorepo structure with the following components:
