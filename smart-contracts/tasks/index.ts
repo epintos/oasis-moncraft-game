@@ -1,5 +1,4 @@
 import dotenv from "dotenv";
-import { toUtf8Bytes } from "ethers";
 import { task } from "hardhat/config";
 
 dotenv.config();
@@ -77,7 +76,7 @@ task("deploy").setAction(async (_args, hre) => {
   );
   const monCraftAddr = await monCraft.waitForDeployment();
 
-  const accessCodeBytes = toUtf8Bytes(process.env.ROFL_ACCESS_CODE!);
+  const accessCodeBytes = Buffer.from(process.env.ROFL_ACCESS_CODE!, "hex");
   const tx = await monCraft.updateROFLAccessCode(accessCodeBytes);
   await tx.wait();
 
