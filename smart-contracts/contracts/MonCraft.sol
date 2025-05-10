@@ -23,10 +23,19 @@ contract MonCraft is IERC721Receiver {
     error MonCraft__MonsterDoesNotExist();
     error MonCraft__TransferFailed();
     error MonCraft__NotOwner();
+    error MonCraft__PlayerCannotJoinFight();
+    error MonCraft__FightNotReady();
 
     enum Status {
         ABSENT,
         IN_PROGRESS
+    }
+
+    enum FightStatus {
+        ABSENT,
+        CREATED,
+        READY,
+        COMPLETE
     }
 
     /// TYPES
@@ -38,18 +47,30 @@ contract MonCraft is IERC721Receiver {
         mapping(uint256 monsterTokenId => bool exists) monsterTokenIdsExists;
     }
 
+    struct Fight {
+        bytes32 sessionCodeOne;
+        bytes32 sessionCodeTwo;
+        FightStatus status;
+        bytes32 winner;
+        uint256 monsterOneTokenId;
+        uint256 monsterTwoTokenId;
+    }
+
     /// STATE VARIABLES
     uint256 private s_seed;
     bytes32 private s_roflAccessCode;
 
     uint256 public s_maxMonsters = 10;
     uint256 public s_probabilityAppearence = 20;
+    uint256 public s_probabilityAttack = 40;
     address public s_roflAddress;
     uint256 public s_sessionsQty;
     address private s_owner;
     MonsterNFT public s_monsterNFT;
     MonsterNFT.Monster[] public s_monsters;
     mapping(bytes32 code => Session session) private s_codeSessions;
+    mapping(uint256 fightId => Fight fight) private s_fights;
+    uint256 public s_fightsQty;
 
     /// EVENTS
     event NewSession(bytes32 indexed sessionCode);
@@ -59,6 +80,10 @@ contract MonCraft is IERC721Receiver {
     event MonsterReleased(bytes32 indexed sessionCode, uint256 tokenId);
     event MonstersWithdrawn(bytes32 indexed sessionCode, address indexed player);
     event MonstersImported(bytes32 indexed sessionCode, address indexed player);
+    event FightCreated(uint256 indexed fightId);
+    event PlayerJoinedFight(bytes32 indexed sessionCode, uint256 playerNumber);
+    event FightDamage(uint256 indexed fightId, uint256 damage);
+    event FightSynced(uint256 indexed tokenId);
 
     /// MODIFIERS
     modifier onlyROFL(bytes32 accesCode) {
@@ -312,11 +337,106 @@ contract MonCraft is IERC721Receiver {
     }
 
     /**
+     * @notice Owner of the contract can create a fight between two players
+     * @param sessionCodeOne code session of player 1
+     * @param sessionCodeTwo code session of player 2
+     */
+    function createFight(bytes32 sessionCodeOne, bytes32 sessionCodeTwo) external onlyOwner returns (uint256 fightId) {
+        Session storage sessionOne = s_codeSessions[sessionCodeOne];
+        Session storage sessionTwo = s_codeSessions[sessionCodeTwo];
+        if (sessionOne.status != Status.IN_PROGRESS || sessionTwo.status != Status.IN_PROGRESS) {
+            revert MonCraft__SessionDoesNotExist();
+        }
+        fightId = s_fightsQty;
+        s_fightsQty++;
+        Fight storage fight = s_fights[fightId];
+        fight.sessionCodeOne = sessionCodeOne;
+        fight.sessionCodeTwo = sessionCodeTwo;
+        fight.status = FightStatus.CREATED;
+        emit FightCreated(fightId);
+    }
+
+    /**
+     * @notice Players can join a fight with a given monster id
+     * @param fightId Fight id
+     * @param sessionCode Player joining session code
+     * @param tokenId Monster token id that the user will use to fight
+     * @param accessCode ROFL access code
+     * @dev This can only be called by ROFL
+     */
+    function joinFight(uint256 fightId, bytes32 sessionCode, uint256 tokenId, bytes32 accessCode)
+        external
+        onlyROFL(accessCode)
+    {
+        Fight storage fight = s_fights[fightId];
+        if (fight.status != FightStatus.CREATED) {
+            revert MonCraft__PlayerCannotJoinFight();
+        }
+
+        Session storage session = s_codeSessions[sessionCode];
+        if (session.status != Status.IN_PROGRESS) {
+            revert MonCraft__SessionDoesNotExist();
+        }
+
+        if (!session.monsterTokenIdsExists[tokenId]) {
+            revert MonCraft__SessionDoesNotHaveTokenId();
+        }
+
+        uint256 player;
+        if (fight.sessionCodeOne == bytes32(0)) {
+            fight.sessionCodeOne = sessionCode;
+            fight.monsterOneTokenId = tokenId;
+            player = 1;
+        } else {
+            fight.sessionCodeTwo = sessionCode;
+            fight.monsterTwoTokenId = tokenId;
+            fight.status = FightStatus.READY;
+            player = 2;
+        }
+        emit PlayerJoinedFight(sessionCode, player);
+    }
+
+    function syncFight(uint256 fightId, bytes32 winner, bytes32 accessCode) external onlyROFL(accessCode) {
+        Fight storage fight = s_fights[fightId];
+        if (fight.status != FightStatus.READY) {
+            revert MonCraft__FightNotReady();
+        }
+
+        fight.winner = winner;
+        Session storage session = s_codeSessions[winner];
+        if (session.status != Status.IN_PROGRESS) {
+            revert MonCraft__SessionDoesNotExist();
+        }
+
+        uint256 tokenId;
+        if (winner == fight.sessionCodeOne) {
+            tokenId = fight.monsterOneTokenId;
+            s_monsterNFT.burn(tokenId);
+            session.monsterTokenIdsExists[tokenId] = false;
+        } else if (winner == fight.sessionCodeTwo) {
+            tokenId = fight.monsterTwoTokenId;
+            s_monsterNFT.burn(tokenId);
+            session.monsterTokenIdsExists[tokenId] = false;
+        } else {
+            revert MonCraft__InvalidSessionCode();
+        }
+        emit FightSynced(tokenId);
+    }
+
+    /**
      * @notice Updates the probability of a monster appearing
      * @param newProbability new probability
      */
     function updateProbabilityAppearance(uint256 newProbability) external onlyOwner {
         s_probabilityAppearence = newProbability;
+    }
+
+    /**
+     * @notice Updates the probability of a monster missing an attack during a fight
+     * @param probabilityAttack new probability
+     */
+    function updateProbabilityAttack(uint256 probabilityAttack) external onlyOwner {
+        s_probabilityAttack = probabilityAttack;
     }
 
     /**
@@ -386,7 +506,7 @@ contract MonCraft is IERC721Receiver {
     }
 
     /**
-     * @notices Returns a session's public information
+     * @notice Returns a session's public information
      * @param sessionCode session identifier
      * @return status session status
      * @return currentStep current player's step
@@ -394,11 +514,62 @@ contract MonCraft is IERC721Receiver {
      * @dev Returns the public information from the session only
      */
     function getSessionInformation(bytes32 sessionCode)
-        public
+        external
         view
-        returns (uint256 status, uint256 currentStep, uint256[] monstersTokenIds)
+        returns (uint256 status, uint256 currentStep, uint256[] memory monstersTokenIds)
     {
         Session storage session = s_codeSessions[sessionCode];
-        return (session.status, session.currentStep, session.monstersTokenIds);
+
+        // Copy from storage to memory
+        uint256[] memory tokens = session.monstersTokenIds;
+
+        return (uint256(session.status), session.currentStep, tokens);
+    }
+
+    /**
+     * @notice Returns the fight information
+     * @param fightId fight id
+     * @return monsterOneTokenId player's one monster
+     * @return monsterTwoTokenId player's two monster
+     * @return status fight status
+     *
+     */
+    function getFightInformation(uint256 fightId)
+        external
+        view
+        returns (uint256 monsterOneTokenId, uint256 monsterTwoTokenId, FightStatus status)
+    {
+        Fight storage fight = s_fights[fightId];
+        return (fight.monsterOneTokenId, fight.monsterTwoTokenId, fight.status);
+    }
+
+    /**
+     * @notice Returns a random attack damage
+     * @param fightId Fight id
+     * @param sessionCode Player joining session code
+     * @return damage Damage that the monster will cause to the other monster
+     */
+    function getFightDamage(uint256 fightId, bytes32 sessionCode) external view returns (uint256 damage) {
+        Fight storage fight = s_fights[fightId];
+        if (fight.status != FightStatus.READY) {
+            revert MonCraft__FightNotReady();
+        }
+
+        uint256 attackDamageOne = s_monsterNFT.getMonsterAttackDamage(fight.monsterOneTokenId);
+        uint256 attackDamageTwo = s_monsterNFT.getMonsterAttackDamage(fight.monsterTwoTokenId);
+
+        uint256 monsterTokenId;
+        uint256 maxDamage;
+        if (sessionCode == fight.sessionCodeOne) {
+            monsterTokenId = fight.monsterOneTokenId;
+            maxDamage = attackDamageOne;
+        } else if (sessionCode == fight.sessionCodeTwo) {
+            monsterTokenId = fight.monsterTwoTokenId;
+            maxDamage = attackDamageTwo;
+        } else {
+            revert MonCraft__InvalidSessionCode();
+        }
+        damage = uint256(keccak256(abi.encodePacked(s_seed, sessionCode, fightId, monsterTokenId, block.timestamp)))
+            % (maxDamage + 1);
     }
 }

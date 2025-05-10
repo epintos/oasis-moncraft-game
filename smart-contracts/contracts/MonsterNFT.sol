@@ -77,4 +77,8 @@ contract MonsterNFT is ERC721, Ownable {
         // Return as a data URI
         return string(abi.encodePacked("data:application/json;base64,", base64Json));
     }
+
+    function getMonsterAttackDamage(uint256 tokenId) external view returns (uint256 attackDamage) {
+        attackDamage = s_monsters[tokenId].attackDamage;
+    }
 }

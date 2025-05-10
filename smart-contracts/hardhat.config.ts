@@ -26,6 +26,15 @@ const config: HardhatUserConfig = {
       accounts: process.env.LOCAL_PRIVATE_KEY ? [process.env.LOCAL_PRIVATE_KEY] : [],
     },
   },
+  etherscan: {
+    //  Enabled by default (not supported on Sapphire)
+    enabled: false
+  },
+  sourcify: {
+    // Disabled by default
+    // Doesn't need an API key
+    enabled: true
+  }
 };
 
 
