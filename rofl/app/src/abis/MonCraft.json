@@ -460,11 +460,6 @@
       },
       {
         "internalType": "bytes32",
-        "name": "sessionCode",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
         "name": "accessCode",
         "type": "bytes32"
       }
@@ -473,7 +468,12 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "damage",
+        "name": "damagePlayerOne",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "damagePlayerTwo",
         "type": "uint256"
       }
     ],

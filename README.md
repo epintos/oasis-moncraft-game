@@ -89,6 +89,18 @@ The following compile and deploy to the different networks:
   pnpm generate-abi
 ```
 
+### UI Deploy
+
+Install Vercel:
+```bash
+  npm install -g vercel
+```
+
+Deploy site:
+```bash
+  vercel
+```
+
 
 ### Contributors
 
