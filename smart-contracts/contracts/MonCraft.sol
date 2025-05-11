@@ -26,6 +26,7 @@ contract MonCraft is IERC721Receiver, Ownable {
     error MonCraft__PlayerCannotJoinFight();
     error MonCraft__FightNotReady();
     error MonCraft__NotValidAccessCode();
+    error MonCraft__AlreadyTwoPlayersJoined();
 
     enum Status {
         ABSENT,
@@ -56,6 +57,7 @@ contract MonCraft is IERC721Receiver, Ownable {
         bytes32 winner;
         uint256 monsterOneTokenId;
         uint256 monsterTwoTokenId;
+        uint256 playersJoinedQty;
     }
 
     /// STATE VARIABLES
@@ -381,17 +383,27 @@ contract MonCraft is IERC721Receiver, Ownable {
             revert MonCraft__SessionDoesNotHaveTokenId();
         }
 
+        if (fight.playersJoinedQty == 2) {
+            revert MonCraft__AlreadyTwoPlayersJoined();
+        }
+
         uint256 player;
-        if (fight.sessionCodeOne == bytes32(0)) {
-            fight.sessionCodeOne = sessionCode;
+        if (fight.sessionCodeOne == sessionCode) {
             fight.monsterOneTokenId = tokenId;
             player = 1;
-        } else {
-            fight.sessionCodeTwo = sessionCode;
+        } else if (fight.sessionCodeTwo == sessionCode) {
             fight.monsterTwoTokenId = tokenId;
-            fight.status = FightStatus.READY;
             player = 2;
+        } else {
+            revert MonCraft__InvalidSessionCode();
         }
+
+        fight.playersJoinedQty++;
+
+        if (fight.playersJoinedQty == 2) {
+            fight.status = FightStatus.READY;
+        }
+
         emit PlayerJoinedFight(fightId, session.id, player);
     }
 

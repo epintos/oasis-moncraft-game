@@ -57,6 +57,11 @@
   },
   {
     "inputs": [],
+    "name": "MonCraft__AlreadyTwoPlayersJoined",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "MonCraft__CurrentStepIsLower",
     "type": "error"
   },
@@ -509,6 +514,16 @@
         "internalType": "enum MonCraft.FightStatus",
         "name": "status",
         "type": "uint8"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "sessionCodeOne",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "sessionCodeTwo",
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
