@@ -1,3 +1,4 @@
+// const apiUrl = 'http://localhost:5100'; // For local testing
 const apiUrl = 'http://localhost:8080'; // For local testing
 // const apiUrl = 'http://84.255.245.194:5100'; // For production
 
@@ -75,24 +76,23 @@ async function loadGame() {
 
 async function move() {
   if (!sessionCode) {
-    output.textContent = 'Please start or load a session first';
+    showModal('Please start or load a session first');
     return;
   }
   const data = await apiRequest('/checkStep', { sessionCode, playerStep: playerStep++ });
   if (data.type === 'checkStepResult' && data.hasAppeared) {
     isBusy = true;
-    const confirmed = confirm(`A wild monster appeared (index ${data.monsterIndex})! Try to capture it?`);
+    const confirmed = await showModal(`A wild monster appeared (index ${data.monsterIndex})! Try to capture it?`, { confirm: true });
     if (confirmed) {
-      await apiRequest('/captureMonster', {
+      const captureData = await apiRequest('/captureMonster', {
         sessionCode,
         monsterIndex: parseInt(data.monsterIndex),
         currentStep: playerStep,
-      }).then(async (captureData) => {
-        if (captureData.type === 'captureMonsterResult' && captureData.success) {
-          alert(captureData.message);
-          await loadGame(); // Refresh monster list
-        }
       });
+      if (captureData.type === 'captureMonsterResult' && captureData.success) {
+        await showModal(captureData.message);
+        await loadGame(); // Refresh monster list
+      }
     }
     isBusy = false;
   }
@@ -112,7 +112,7 @@ async function saveGame() {
 
 async function joinSelectedMonsterToFight(fightId, tokenId) {
   if (!sessionCode) {
-    output.textContent = 'No session active';
+    showModal('No session active');
     return;
   }
   if (isBusy) return;
@@ -125,13 +125,13 @@ async function joinSelectedMonsterToFight(fightId, tokenId) {
   if (data.type === 'joinFightResult') {
     if (data.success) {
       if (data.status === '2') {
-        alert(data.won ? '🎉 You won the fight!' : 'You lost the fight.');
+        await showModal(data.won ? '🎉 You won the fight!' : 'You lost the fight.');
       } else {
-        alert('You joined the fight.');
+        await showModal('You joined the fight.');
       }
-      await loadGame(); // Refresh state
+      await loadGame();
     } else {
-      alert(`Failed to join fight: ${data.message}`);
+      await showModal(`Failed to join fight: ${data.message}`);
     }
   }
 }
@@ -180,9 +180,9 @@ function renderMonsterList(monsters) {
 
     const joinButton = document.createElement('button');
     joinButton.textContent = 'Join Fight';
-    joinButton.onclick = () => {
+    joinButton.onclick = async () => {
       if (isBusy) return;
-      const fightId = prompt('Enter fight ID to join:');
+      const fightId = await showModal('Enter fight ID to join:', { input: true, confirm: true });
       if (fightId) {
         joinSelectedMonsterToFight(fightId, monster.tokenId);
       }

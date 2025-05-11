@@ -9,6 +9,42 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
     <style>
+      .modal {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+      }
+
+      .modal.hidden {
+        display: none;
+      }
+
+      .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        width: 300px;
+      }
+
+      .modal-buttons {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      #modal-input {
+        margin-top: 10px;
+        padding: 5px;
+        width: 90%;
+      }
+
       /* Spinner styles */
       .spinner {
         display: none;
@@ -93,5 +129,45 @@
         arrow.classList.toggle("arrow-down");
       }
     </script>
+    <script>
+      function showModal(message, options = {}) {
+        return new Promise((resolve) => {
+          const modal = document.getElementById('modal');
+          const msg = document.getElementById('modal-message');
+          const input = document.getElementById('modal-input');
+          const okBtn = document.getElementById('modal-ok');
+          const cancelBtn = document.getElementById('modal-cancel');
+      
+          msg.textContent = message;
+          input.value = '';
+          input.classList.toggle('hidden', !options.input);
+          cancelBtn.classList.toggle('hidden', !options.confirm);
+      
+          modal.classList.remove('hidden');
+      
+          okBtn.onclick = () => {
+            modal.classList.add('hidden');
+            resolve(options.input ? input.value : true);
+          };
+      
+          cancelBtn.onclick = () => {
+            modal.classList.add('hidden');
+            resolve(false);
+          };
+      
+          if (options.input) input.focus();
+        });
+      }
+    </script>
+    <div id="modal" class="modal hidden">
+      <div class="modal-content">
+        <p id="modal-message"></p>
+        <input id="modal-input" class="hidden" />
+        <div class="modal-buttons">
+          <button id="modal-ok">OK</button>
+          <button id="modal-cancel" class="hidden">Cancel</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
