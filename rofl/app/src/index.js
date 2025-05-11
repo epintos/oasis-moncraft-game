@@ -1,5 +1,5 @@
 const express = require('express');
-const WebSocket = require('ws');
+const cors = require('cors'); // Add CORS for client-server communication
 require('dotenv').config();
 
 const {
@@ -13,106 +13,163 @@ const {
 } = require('./blockchain');
 
 const app = express();
-const server = app.listen(process.env.PORT, '0.0.0.0', () =>
-  console.log(`Server running on 0.0.0.0:${process.env.PORT}`)
+
+// Middleware
+app.use(cors({
+  origin: 'http://localhost:6789', // Allow only this origin
+  methods: ['GET', 'POST'], // Allow these methods
+  allowedHeaders: ['Content-Type'], // Allow these headers
+}));
+app.use(express.json()); // Parse JSON bodies
+
+// Helper function to handle BigInt serialization
+const serializeResponse = (data) => JSON.stringify(data, (_, value) =>
+  typeof value === 'bigint' ? value.toString() : value
 );
 
-const ws = new WebSocket.Server({ server });
-
-ws.on('connection', (ws) => {
-  console.log('Client connected');
-
-  ws.session = {
-    sessionCode: null,
-    sessionId: null,
-    playerStep: 0,
-  };
-
-  ws.on('message', async (message) => {
-    let response;
-    try {
-      const data = JSON.parse(message.toString());
-      console.log('Received:', data);
-  
-      if (data.type === 'startGame') {
-        const result = await startGame();
-        if (result.success) {
-          ws.session.sessionCode = result.sessionCode;
-          ws.session.sessionId = result.sessionId;
-          ws.session.playerStep = 0;
-        }
-        response = { type: 'startGameResult', ...result };
-  
-      } else if (data.type === 'loadGame' && data.sessionCode) {
-        const result = await getSession(data.sessionCode);
-        if (result.success) {
-          ws.session.sessionCode = result.sessionCode;
-          ws.session.sessionId = result.sessionId;
-          ws.session.playerStep = result.currentStep;
-        }
-        response = { type: 'loadGameResult', ...result };
-  
-      } else if (['saveGame', 'captureMonster', 'releaseMonster'].includes(data.type)) {
-        const sessionCode = data.sessionCode ?? ws.session.sessionCode;
-        if (!sessionCode) throw new Error("Missing sessionCode");
-  
-        const sessionData = await getSession(sessionCode);
-        if (!sessionData.success) throw new Error("Failed to fetch session");
-  
-        const session = {
-          sessionCode,
-          sessionId: sessionData.sessionId,
-        };
-  
-        if (data.type === 'saveGame') {
-          response = await saveGame(sessionCode, ws.session.playerStep, session.sessionId);
-          response.type = 'saveGameResult';
-  
-        } else if (data.type === 'captureMonster') {
-          response = await captureMonster(session, data.monsterIndex, ws.session.playerStep);
-          response.type = 'captureMonsterResult';
-  
-        } else if (data.type === 'releaseMonster') {
-          response = await releaseMonster(session, data.tokenId);
-          response.type = 'releaseMonsterResult';
-        }
-  
-      } else if (data.type === 'checkStep') {
-        const sessionCode = ws.session.sessionCode;
-        const playerStep = ws.session.playerStep;
-        const result = await checkStep(sessionCode, playerStep);
-        if (result.success) ws.session.playerStep++;
-        response = { type: 'checkStepResult', ...result };
-  
-      } else if (data.type === 'joinFight') {
-        const sessionCode = data.sessionCode ?? ws.session.sessionCode;
-        const sessionId = data.sessionId ?? ws.session.sessionId;
-        const tokenId = data.tokenId;
-        const fightId = data.fightId;
-        console.log('joinFight', sessionCode, sessionId, tokenId, fightId);
-        if (!sessionCode || typeof fightId === 'undefined') throw new Error("Missing joinFight data");
-      
-        const result = await joinFight(data.fightId, sessionCode, tokenId, sessionId);
-        response = { type: 'joinFightResult', ...result };
-
-      } else {
-        response = { type: 'error', message: 'Unknown or invalid message type' };
-      }
-  
-    } catch (err) {
-      console.error('Message handling error:', err);
-      response = {
-        type: 'error',
-        message: err.message || 'Invalid JSON or server error',
-      };
-    }
-  
-    ws.send(JSON.stringify(response, (_, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    ));
-  });  
-
-  ws.on('close', () => {
-    console.log('Client disconnected');
-  });
+// Routes
+app.post('/startGame', async (req, res) => {
+  try {
+    const result = await startGame();
+    res.status(200).send(serializeResponse({ type: 'startGameResult', ...result }));
+  } catch (err) {
+    console.error('startGame error:', err);
+    res.status(500).send(serializeResponse({
+      type: 'error',
+      message: err.message || 'Server error',
+    }));
+  }
 });
+
+app.post('/loadGame', async (req, res) => {
+  const { sessionCode } = req.body;
+  if (!sessionCode) {
+    return res.status(400).send(serializeResponse({
+      type: 'error',
+      message: 'Missing sessionCode',
+    }));
+  }
+  try {
+    const result = await getSession(sessionCode);
+    res.status(200).send(serializeResponse({ type: 'loadGameResult', ...result }));
+  } catch (err) {
+    console.error('loadGame error:', err);
+    res.status(500).send(serializeResponse({
+      type: 'error',
+      message: err.message || 'Server error',
+    }));
+  }
+});
+
+app.post('/saveGame', async (req, res) => {
+  const { sessionCode, currentStep } = req.body;
+  if (!sessionCode) {
+    return res.status(400).send(serializeResponse({
+      type: 'error',
+      message: 'Missing sessionCode',
+    }));
+  }
+  try {
+    const sessionData = await getSession(sessionCode);
+    if (!sessionData.success) throw new Error('Failed to fetch session');
+    const result = await saveGame(sessionCode, currentStep, sessionData.sessionId);
+    res.status(200).send(serializeResponse({ type: 'saveGameResult', ...result }));
+  } catch (err) {
+    console.error('saveGame error:', err);
+    res.status(500).send(serializeResponse({
+      type: 'error',
+      message: err.message || 'Server error',
+    }));
+  }
+});
+
+app.post('/checkStep', async (req, res) => {
+  const { sessionCode, playerStep } = req.body;
+  if (!sessionCode) {
+    return res.status(400).send(serializeResponse({
+      type: 'error',
+      message: 'Missing sessionCode',
+    }));
+  }
+  try {
+    const result = await checkStep(sessionCode, playerStep);
+    res.status(200).send(serializeResponse({ type: 'checkStepResult', ...result }));
+  } catch (err) {
+    console.error('checkStep error:', err);
+    res.status(500).send(serializeResponse({
+      type: 'error',
+      message: err.message || 'Server error',
+    }));
+  }
+});
+
+app.post('/captureMonster', async (req, res) => {
+  const { sessionCode, monsterIndex, currentStep } = req.body;
+  if (!sessionCode || monsterIndex === undefined) {
+    return res.status(400).send(serializeResponse({
+      type: 'error',
+      message: 'Missing sessionCode or monsterIndex',
+    }));
+  }
+  try {
+    const sessionData = await getSession(sessionCode);
+    if (!sessionData.success) throw new Error('Failed to fetch session');
+    const session = { sessionCode, sessionId: sessionData.sessionId };
+    const result = await captureMonster(session, monsterIndex, currentStep);
+    res.status(200).send(serializeResponse({ type: 'captureMonsterResult', ...result }));
+  } catch (err) {
+    console.error('captureMonster error:', err);
+    res.status(500).send(serializeResponse({
+      type: 'error',
+      message: err.message || 'Server error',
+    }));
+  }
+});
+
+app.post('/releaseMonster', async (req, res) => {
+  const { sessionCode, tokenId } = req.body;
+  if (!sessionCode || tokenId === undefined) {
+    return res.status(400).send(serializeResponse({
+      type: 'error',
+      message: 'Missing sessionCode or tokenId',
+    }));
+  }
+  try {
+    const sessionData = await getSession(sessionCode);
+    if (!sessionData.success) throw new Error('Failed to fetch session');
+    const session = { sessionCode, sessionId: sessionData.sessionId };
+    const result = await releaseMonster(session, tokenId);
+    res.status(200).send(serializeResponse({ type: 'releaseMonsterResult', ...result }));
+  } catch (err) {
+    console.error('releaseMonster error:', err);
+    res.status(500).send(serializeResponse({
+      type: 'error',
+      message: err.message || 'Server error',
+    }));
+  }
+});
+
+app.post('/joinFight', async (req, res) => {
+  const { sessionCode, sessionId, tokenId, fightId } = req.body;
+  if (!sessionCode || fightId === undefined) {
+    return res.status(400).send(serializeResponse({
+      type: 'error',
+      message: 'Missing sessionCode or fightId',
+    }));
+  }
+  try {
+    const result = await joinFight(fightId, sessionCode, tokenId, sessionId);
+    res.status(200).send(serializeResponse({ type: 'joinFightResult', ...result }));
+  } catch (err) {
+    console.error('joinFight error:', err);
+    res.status(500).send(serializeResponse({
+      type: 'error',
+      message: err.message || 'Server error',
+    }));
+  }
+});
+
+// Start server
+app.listen(process.env.PORT, '0.0.0.0', () =>
+  console.log(`Server running on 0.0.0.0:${process.env.PORT}`)
+);
