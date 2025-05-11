@@ -81,3 +81,56 @@ task("deploy").setAction(async (_args, hre) => {
   console.log(`✅ MonsterNFT address: ${monsterNFTAddress}`);
   return monCraftAddr.target;
 });
+
+task("createFight", "Creates a fight in the MonCraft contract")
+  .addParam("sessioncodeone", "Player 1 sessionCode")
+  .addParam("sessioncodetwo", "Player 2 sessionCode")
+  .addParam("moncraftaddress", "Contract Address")
+  .setAction(async ({ sessioncodeone, sessioncodetwo, moncraftaddress }, hre) => {
+    const [deployer] = await hre.ethers.getSigners();
+
+    // Attach to the MonCraft contract using the provided address
+    const monCraft = await hre.ethers.getContractAt("MonCraft", moncraftaddress);
+
+    // Convert session codes to bytes32
+    const sessionCodeOneBytes = hre.ethers.encodeBytes32String(sessioncodeone);
+    const sessionCodeTwoBytes = hre.ethers.encodeBytes32String(sessioncodetwo);
+
+    // Call the createFight function
+    try {
+      const tx = await monCraft.createFight(sessionCodeOneBytes, sessionCodeTwoBytes);
+      console.log(`Transaction hash: ${tx.hash}`);
+
+      // Wait for the transaction to be mined and get the receipt
+      const receipt = await tx.wait();
+      console.log("Transaction mined in block:", receipt.blockNumber);
+
+      // Log additional details from the receipt
+      console.log("Transaction status:", receipt.status === 1 ? "Success" : "Failed");
+      console.log("Gas used:", receipt.gasUsed.toString());
+
+      // Find the FightCreated event in the logs
+      const fightCreatedEvent = receipt.logs.find(
+        (log: any) =>
+          log.address.toLowerCase() === moncraftaddress.toLowerCase() &&
+          log.topics[0] === hre.ethers.id("FightCreated(uint256)")
+      );
+
+      if (fightCreatedEvent) {
+        // Decode the event data
+        const decoded = hre.ethers.AbiCoder.defaultAbiCoder().decode(
+          ["uint256"],
+          fightCreatedEvent.data
+        );
+        const fightId = decoded[0].toString();
+        console.log(`Fight created with fightId: ${fightId}`);
+      } else {
+        console.log("FightCreated event not found in logs.");
+        return;
+      }
+
+      console.log("Fight created successfully!");
+    } catch (error) {
+      console.error("Error creating the fight:", error);
+    }
+  });

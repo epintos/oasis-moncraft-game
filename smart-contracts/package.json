@@ -19,6 +19,7 @@
     "deploy-local": "pnpm hardhat compile && pnpm hardhat deploy --network sapphire-localnet",
     "deploy-testnet": "pnpm hardhat compile && pnpm hardhat deploy --network sapphire-testnet",
     "test": "hardhat test",
-    "generate-abi": "pnpm hardhat compile && pnpm hardhat run scripts/export-abi.ts"
+    "generate-abi": "pnpm hardhat compile && pnpm hardhat run scripts/export-abi.ts",
+    "create-fight": "pnpm hardhat createFight --sessioncodeone 'SESSION_1' --sessioncodetwo 'SESSION_2' --moncraftaddress 'CONTRACT_ADDRESS'"
   }
 }
