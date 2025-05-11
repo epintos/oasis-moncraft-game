@@ -1,58 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>MonCraft Game Client</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="container">
-    <!-- Image at the top -->
-    <img src="./images/logo.webp" alt="Game Image" class="game-image">
-    
-    <!-- Welcome Message -->
-    <div class="welcome-message">
-      <h2>Welcome to MonCraft!</h2>
-      <p>Start your monster-catching adventure by entering a session code below or creating a new game.</p>
+  <head>
+    <meta charset="UTF-8" />
+    <title>MonCraft</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="./images/favicon.ico" type="image/x-icon" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="./images/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="./images/favicon-16x16.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="./images/apple-touch-icon.png"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Image at the top -->
+      <img src="./images/logo.webp" alt="Game Image" class="game-image" />
+
+      <!-- Welcome Message -->
+      <div class="welcome-message">
+        <h2>Welcome to MonCraft!</h2>
+        <p>
+          Start your monster-catching adventure by entering a session code below
+          or creating a new game.
+        </p>
+      </div>
+
+      <div class="input-group">
+        <label for="sessionCode">Session Code:</label>
+        <input
+          type="text"
+          id="sessionCode"
+          placeholder="Enter session code"
+          value="0x..."
+        />
+      </div>
+
+      <div class="button-group">
+        <button onclick="startSession()">Start Game</button>
+        <button onclick="loadGame()">Load Game</button>
+        <button onclick="saveGame()">Save Game</button>
+      </div>
+
+      <div class="grid-container">
+        <div id="grid" class="grid"></div>
+      </div>
+
+      <h3>Captured Monsters</h3>
+      <ul id="monsterList"></ul>
+
+      <!-- Debug Section -->
+      <div class="debug-header" onclick="toggleDebug()">
+        <span class="toggle-arrow arrow-right">▶</span>
+        <h3>Debug Console</h3>
+      </div>
+      <div id="debugContent" class="debug-content">
+        <pre id="output">Connecting...</pre>
+      </div>
     </div>
-    
-    <div class="input-group">
-      <label for="sessionCode">Session Code:</label>
-      <input type="text" id="sessionCode" placeholder="Enter session code" value="0x..." />
-    </div>
-    
-    <div class="button-group">
-      <button onclick="startSession()">Start Game</button>
-      <button onclick="loadGame()">Load Game</button>
-      <button onclick="saveGame()">Save Game</button>
-    </div>
-    
-    <div class="grid-container">
-      <div id="grid" class="grid"></div>
-    </div>
-    
-    <h3>Captured Monsters</h3>
-    <ul id="monsterList"></ul>
-    
-    <!-- Debug Section -->
-    <div class="debug-header" onclick="toggleDebug()">
-      <span class="toggle-arrow arrow-right">▶</span>
-      <h3>Debug Console</h3>
-    </div>
-    <div id="debugContent" class="debug-content">
-      <pre id="output">Connecting...</pre>
-    </div>
-  </div>
-  
-  <script src="app.js"></script>
-  <script>
-    function toggleDebug() {
-      const debugContent = document.getElementById('debugContent');
-      const arrow = document.querySelector('.toggle-arrow');
-      debugContent.classList.toggle('show');
-      arrow.classList.toggle('arrow-right');
-      arrow.classList.toggle('arrow-down');
-    }
-  </script>
-</body>
+
+    <script src="app.js"></script>
+    <script>
+      function toggleDebug() {
+        const debugContent = document.getElementById("debugContent");
+        const arrow = document.querySelector(".toggle-arrow");
+        debugContent.classList.toggle("show");
+        arrow.classList.toggle("arrow-right");
+        arrow.classList.toggle("arrow-down");
+      }
+    </script>
+  </body>
 </html>
