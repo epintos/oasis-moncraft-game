@@ -48,11 +48,11 @@ monCraft.on('MonsterReleased', (sessionId, tokenId, event) => {
   });
 });
 
-monCraft.on('PlayerJoinedFight', (fightId, sessionId, player) => {
+monCraft.on('PlayerJoinedFight', (fightId, sessionId, playerNumber) => {
   eventBuffers.PlayerJoinedFight.push({
     fightId: fightId.toString(),
     sessionId: sessionId.toString(),
-    player: player.toString(),
+    playerNumber: playerNumber.toString(),
   });
 });
 
@@ -88,12 +88,8 @@ function waitForEvent(eventType, sessionId, timeout = 30000) {
 async function startGame() {
   try {
     const tx = await monCraft.startGame(accessCode);
-    
-    console.log('Transaction sent:', tx.hash);
-    
+        
     const receipt = await tx.wait();
-
-    console.log('Transaction receipt:', receipt);
 
     let sessionId = null;
     for (const log of receipt.logs) {
@@ -109,7 +105,6 @@ async function startGame() {
     if (!sessionId) throw new Error("NewSession event not found");
 
     const sessionCode = await monCraft.getSessionCode(sessionId, accessCode);
-
     return {
       success: true,
       sessionCode,
@@ -241,12 +236,11 @@ async function releaseMonster(session, tokenId) {
   }
 }
 
-async function joinFight(fightId, sessionCode, tokenId) {
+async function joinFight(fightId, sessionCode, tokenId, sessionId) {
   try {
     const tx = await monCraft.joinFight(fightId, sessionCode, tokenId, accessCode);
     const receipt = await tx.wait();
-
-    const event = await waitForEvent("PlayerJoinedFight", sessionCode);
+    const event = await waitForEvent("PlayerJoinedFight", sessionId);
 
     const [
       monsterOneTokenId,
@@ -283,8 +277,9 @@ async function joinFight(fightId, sessionCode, tokenId) {
         winnerHPLeft = currentHp2;
       }
 
-      const syncTx = await monCraft.syncFight(fightId, winner, winnerHPLeft, accessCode);
+      const syncTx = await monCraft.syncFight(fightId, winner, winnerHPLeft.toString(), accessCode);
       await syncTx.wait();
+
     }
 
     return {

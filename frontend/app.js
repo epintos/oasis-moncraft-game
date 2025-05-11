@@ -26,7 +26,7 @@ ws.onmessage = (event) => {
     if (data.type === "startGameResult" && data.success) {
       sessionCode = data.sessionCode;
       playerStep = 0;
-      document.getElementById("sessionCode").value = sescdsionCode;
+      document.getElementById("sessionCode").value = sessionCode;
       isBusy = false;
     }
 
