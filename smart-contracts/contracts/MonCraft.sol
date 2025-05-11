@@ -422,20 +422,25 @@ contract MonCraft is IERC721Receiver, Ownable {
             revert MonCraft__SessionDoesNotExist();
         }
 
+        fight.status = FightStatus.COMPLETE;
+
         uint256 tokenId;
         if (winner == fight.sessionCodeOne) {
+            Session storage looser = s_codeSessions[fight.sessionCodeTwo];
             tokenId = fight.monsterTwoTokenId;
+            looser.monsterTokenIdsExists[tokenId] = false;
             s_monsterNFT.burn(tokenId);
             s_monsterNFT.updateHP(fight.monsterOneTokenId, winnerHPLeft);
-            session.monsterTokenIdsExists[tokenId] = false;
         } else if (winner == fight.sessionCodeTwo) {
+            Session storage looser = s_codeSessions[fight.sessionCodeOne];
             tokenId = fight.monsterOneTokenId;
+            looser.monsterTokenIdsExists[tokenId] = false;
             s_monsterNFT.burn(tokenId);
             s_monsterNFT.updateHP(fight.monsterTwoTokenId, winnerHPLeft);
-            session.monsterTokenIdsExists[tokenId] = false;
         } else {
             revert MonCraft__InvalidSessionCode();
         }
+
         emit FightSynced(fightId, tokenId);
     }
 
@@ -561,10 +566,17 @@ contract MonCraft is IERC721Receiver, Ownable {
         external
         view
         onlyROFL(accessCode)
-        returns (uint256 monsterOneTokenId, uint256 monsterTwoTokenId, FightStatus status, bytes32 sessionCodeOne, bytes32 sessionCodeTwo)
+        returns (
+            uint256 monsterOneTokenId,
+            uint256 monsterTwoTokenId,
+            FightStatus status,
+            bytes32 sessionCodeOne,
+            bytes32 sessionCodeTwo
+        )
     {
         Fight storage fight = s_fights[fightId];
-        return (fight.monsterOneTokenId, fight.monsterTwoTokenId, fight.status, fight.sessionCodeOne, fight.sessionCodeTwo);
+        return
+            (fight.monsterOneTokenId, fight.monsterTwoTokenId, fight.status, fight.sessionCodeOne, fight.sessionCodeTwo);
     }
 
     /**
