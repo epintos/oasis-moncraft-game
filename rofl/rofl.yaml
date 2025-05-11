@@ -31,18 +31,20 @@ deployments:
           min_tcb_evaluation_data_number: 18
           tdx: {}
       enclaves:
-        - 1KUCWo33QoN/e7s9Le4oFAREqRt4dr78gc34BaurpkEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
-        - X8vDLVy1CdCSC5QM9M8LICWuuRwzgOEjtP2jgpwBsJ0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+        - 9XSPNReQaGx1pU53jlqt5MFdu/g3QhS0Q5TGRCDLGOMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+        - 5cZZTdZdyyUwTpx/AelAnU3DKlq0+zqK00DzMOMIxJ4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
       endorsements:
         - any: {}
       fees: endorsing_node
       max_expiration: 3
     secrets:
-      - name: PORT
-        value: pGJwa1ggSvTBiSk3tdHu64Q2d9FRhwVuKLvSURmU1hWCD/2M2kNkbmFtZVS7fD0Ynj3zv765s3s062NWhp5ogWVub25jZU/nYSugh2Oyxd15R2cYq4NldmFsdWVUkHHSK4l+MIaxJBMVXwHI51XAhbA=
       - name: RPC_URL
         value: pGJwa1gg1ctUdu25ZRBdsyiDxMF3E6orznxAmf3SqVnTaEHoGBtkbmFtZVe32lAp3RvPUJscWI77MDOYW1nUdW+fJmVub25jZU/3UQ6iz7WEnqrHCjFM6xNldmFsdWVYMaRQHqc5m/aqkg358yyo0b2B5FENd0Iz0xSi+MeMkzDZ7l9H+cINDJAfkmQYnQmxvas=
       - name: PRIVATE_KEY
         value: pGJwa1ggaMvcO6gE5mo1dvIuCYIDkWmLeqRLgeRBzrZ9YuyuBTBkbmFtZVgbuShdmzjXtKVP8XimLIv6z/DDBDe4tZwTuH9hZW5vbmNlT47/7Hs1mV0wvxyqCDsvOGV2YWx1ZVhSwaPHfO575FdU3OiyKuY37U9TCN2Eqti/6pQmaxTAej60B8+UAUF5OndgiAXIvKlzAJdnlAUSVQT93a9FJqtUdjFXu4n7aBiaAswTzvq8EPBbKw==
+      - name: NFT_CONTRACT_ADDRESS
+        value: pGJwa1ggPNEpKHPxHSd5HdUtJruiSV1WuFO0egO6kx7snBa1szZkbmFtZVgkyR3ZMIf3wV0blnT/aiMRrvWY+tqyY7N2BFCv5rP2sAQ5rAujZW5vbmNlT4Zu2vGNqUt2+j7wPpz9EGV2YWx1ZVg66mdmbybEK2RVlipa9YU3J5qpC5KZ98nnl5wvfiWrSAzzBMbt13Tbjnud48o/EotUXVOFoeSbWdsAZw==
+      - name: PORT
+        value: pGJwa1gg/Bb8ymivR2dAxNt5DWzcs+UO3kC30ER1CO8GwFtAug1kbmFtZVTyxkiU/oWpQG5gXAETVRUyhxttN2Vub25jZU8LZXiU04QvV0NTd5ZbH3hldmFsdWVUePCR9AN4dPUejD2kPb+7oekOqbw=
       - name: CONTRACT_ADDRESS
-        value: pGJwa1ggmkOp7uRb/KRIY5Yoz/dvX4j6QbMyuWwx76ptnC7DDTFkbmFtZVggwKfu+gS6uvVFtHbqaiYE3DEKNPOmvUzQR8zT64sb8yFlbm9uY2VPpF0R6Z9bIGA+UnogEBi7ZXZhbHVlWDoVpoMz/hpBmCN2j5pB94e5DXWqKkK/Al0N7L6V+cDWUIt1MOknmNGf/O4V8PrvZNXGFOnTpni3yh/B
+        value: pGJwa1gge0O/2XRbtGj0IttrpicrJlx4EYRrjZG7ETQz6ZvxvUZkbmFtZVggQNKRxOHyfBpWS9U2T3BrVRln0G9lGKa5enzCRuPY1ORlbm9uY2VPKnhcxMr/Qf+Cv0jI6W9xZXZhbHVlWDoZLjbwz4bdPxnI7wJ1LFZL8QkUhuu1IeR97906TRL0ujfIHO5nU1lYae05Vj5M419cf9BPwsjM+SWO

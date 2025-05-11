@@ -18,7 +18,6 @@ const eventBuffers = {
   MonsterReleased: [],
 };
 
-// Listener for MonsterCaptured
 monCraft.on('MonsterCaptured', (sessionId, tokenId, captured, event) => {
   eventBuffers.MonsterCaptured.push({
     sessionId: sessionId.toString(),
@@ -27,7 +26,6 @@ monCraft.on('MonsterCaptured', (sessionId, tokenId, captured, event) => {
   });
 });
 
-// Listener for StepsSynced
 monCraft.on('StepsSynced', (sessionId, currentStep, event) => {
   eventBuffers.StepsSynced.push({
     sessionId: sessionId.toString(),
@@ -37,11 +35,6 @@ monCraft.on('StepsSynced', (sessionId, currentStep, event) => {
 });
 
 monCraft.on('MonsterReleased', (sessionId, tokenId, event) => {
-  console.log('[EVENT] MonsterReleased', {
-    sessionId: sessionId.toString(),
-    tokenId: tokenId.toString()
-  });
-
   eventBuffers.MonsterReleased.push({
     sessionId: sessionId.toString(),
     tokenId,
@@ -54,8 +47,6 @@ function waitForEvent(eventType, sessionId, timeout = 30000) {
     return Promise.reject(new Error(`Invalid or missing sessionId for event ${eventType}`));
   }
 
-  // console.log(sessionId, eventType);
-
   return new Promise((resolve, reject) => {
     const start = Date.now();
 
@@ -63,7 +54,6 @@ function waitForEvent(eventType, sessionId, timeout = 30000) {
       const idx = eventBuffers[eventType].findIndex(
         e => e.sessionId === sessionId.toString()
       );
-      console.log(eventBuffers[eventType])
 
       if (idx !== -1) {
         const evt = eventBuffers[eventType].splice(idx, 1)[0];
@@ -74,7 +64,7 @@ function waitForEvent(eventType, sessionId, timeout = 30000) {
         return reject(new Error(`Timed out waiting for ${eventType} for session ${sessionId}`));
       }
 
-      setTimeout(check, 2000);
+      setTimeout(check, 500);
     };
 
     check();
@@ -118,21 +108,13 @@ async function startGame() {
 
 async function getSession(sessionCode) {
   try {
-    console.log("Calling getSession with:", { sessionCode, accessCode });
-    // const [status, currentStep, monstersTokenIds, sessionId] = await monCraft.getSessionInformation(sessionCode, accessCode);
-    // const [status, currentStep, monstersTokenIds, sessionId] = await monCraft.getSessionInformation(sessionCode, accessCode);
-    const resultado = await monCraft.getSessionInformation(sessionCode, accessCode);
-
     const result = await monCraft.getSessionInformation(sessionCode, accessCode);
     const status = result[0];
     const currentStep = result[1];
     const monstersTokenIds = result[2].map(m => m.toString());
     const sessionId = result[3].toString();
 
-    console.log("resultado", resultado);
     if (status.toString() !== "1") throw new Error('Session is not in progress');
-
-    console.log("sessionId", sessionId.toString());
 
     return {
       success: true,
@@ -169,8 +151,6 @@ async function checkStep(sessionCode, playerStep) {
 
 async function saveGame(sessionCode, currentStep, sessionId) {
   try {
-    console.log("Calling saveGame with:", { sessionCode, currentStep, sessionId });
-
     const tx = await monCraft.syncCurrentStep(sessionCode, currentStep, accessCode);
     const receipt = await tx.wait();
 
@@ -191,11 +171,10 @@ async function saveGame(sessionCode, currentStep, sessionId) {
 }
 
 async function captureMonster(session, monsterIndex, currentStep) {
-  try {
-    const { sessionCode, sessionId } = session;
+  const { sessionCode, sessionId } = session;
 
+  try {
     const tx = await monCraft.captureMonster(sessionCode, monsterIndex, currentStep, accessCode);
-    console.log(tx)
     await tx.wait();
 
     const { captured } = await waitForEvent('MonsterCaptured', sessionId);
@@ -210,12 +189,16 @@ async function captureMonster(session, monsterIndex, currentStep) {
     };
   } catch (error) {
     console.error('Capture monster failed:', error);
+
     return {
-      success: false,
-      message: error.message,
+      success: true,
+      transactionHash: null,
+      captured: false,
+      message: `❌ Monster ${monsterIndex} escaped.`,
     };
   }
 }
+
 
 async function releaseMonster(session, tokenId) {
   const { sessionCode, sessionId } = session;
@@ -223,8 +206,6 @@ async function releaseMonster(session, tokenId) {
   try {
     const tx = await monCraft.releaseMonster(sessionCode, tokenId, accessCode);
     await tx.wait();
-
-    console.log(sessionId);
 
     const event = await waitForEvent("MonsterReleased", sessionId);
 

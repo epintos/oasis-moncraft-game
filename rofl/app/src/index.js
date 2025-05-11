@@ -12,13 +12,13 @@ const {
 } = require('./blockchain');
 
 const app = express();
-const server = app.listen(process.env.PORT, () =>
-  console.log(`Server running on port ${process.env.PORT}`)
+const server = app.listen(process.env.PORT, '0.0.0.0', () =>
+  console.log(`Server running on 0.0.0.0:${process.env.PORT}`)
 );
 
-const wss = new WebSocket.Server({ server });
+const ws = new WebSocket.Server({ server });
 
-wss.on('connection', (ws) => {
+ws.on('connection', (ws) => {
   console.log('Client connected');
 
   ws.session = {
@@ -35,7 +35,6 @@ wss.on('connection', (ws) => {
   
       if (data.type === 'startGame') {
         const result = await startGame();
-        console.log('Start game result:', result);
         if (result.success) {
           ws.session.sessionCode = result.sessionCode;
           ws.session.sessionId = result.sessionId;
@@ -45,7 +44,6 @@ wss.on('connection', (ws) => {
   
       } else if (data.type === 'loadGame' && data.sessionCode) {
         const result = await getSession(data.sessionCode);
-        console.log('Load game result:', result);
         if (result.success) {
           ws.session.sessionCode = result.sessionCode;
           ws.session.sessionId = result.sessionId;

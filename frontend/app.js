@@ -1,9 +1,12 @@
-const ws = new WebSocket('ws://localhost:8080');
+const ws = new WebSocket('ws://localhost:8080/');
 
 let playerStep = 0;
 let sessionCode = '';
-let sessionId = '';
-let isBusy = false;
+let isBusy = true;
+
+function logBusy(context) {
+  console.log(`[isBusy] ${context}:`, isBusy);
+}
 
 ws.onopen = () => {
   document.getElementById('output').textContent = 'Connected to WebSocket server';
@@ -18,20 +21,26 @@ ws.onmessage = (event) => {
       sessionCode = data.sessionCode;
       playerStep = 0;
       document.getElementById('sessionCode').value = sessionCode;
+      isBusy = false;
     }
 
     if (data.type === 'loadGameResult' && data.success) {
-        sessionCode = data.sessionCode;
-        playerStep = data.currentStep || 0;
-        document.getElementById('sessionCode').value = sessionCode;
-        renderMonsterList(data.monsters || []);
-    }      
+      sessionCode = data.sessionCode;
+      playerStep = data.currentStep || 0;
+      document.getElementById('sessionCode').value = sessionCode;
+      renderMonsterList(data.monsters || []);
+      
+      isBusy = false;
+    }
 
     if (data.type === 'saveGameResult' && data.success) {
         console.log(`Game saved at step ${playerStep}`);
+        isBusy = false;
     }
 
-    if (data.type === 'checkStepResult' && data.hasAppeared) {
+    if (data.type === 'checkStepResult') {
+      if (data.hasAppeared) {
+        isBusy = true;
         const confirmed = confirm(`A wild monster appeared (index ${data.monsterIndex})! Try to capture it?`);
         if (confirmed) {
           const request = {
@@ -41,27 +50,39 @@ ws.onmessage = (event) => {
             currentStep: playerStep
           };
           ws.send(JSON.stringify(request));
+        } else {
+          isBusy = false;
         }
+      } else {
+        isBusy = false;
+      }
     }
 
     if (data.type === 'captureMonsterResult' && data.success) {
-        alert(data.message);
-      
-        // Request updated session info
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({
-            type: 'loadGame',
-            sessionCode
-          }));
-        }
+      isBusy = true;
+      alert(data.message);
+    
+      if (ws.readyState === WebSocket.OPEN) {
+        isBusy = true;
+        logBusy("Locking before sending loadGame after capture");
+        ws.send(JSON.stringify({
+          type: 'loadGame',
+          sessionCode
+        }));
+      } else {
+        isBusy = false;
+      }
     }
 
     if (data.type === 'releaseMonsterResult' && data.success) {
+      isBusy = true;
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
           type: 'loadGame',
           sessionCode
         }));
+      } else {
+        isBusy = false;
       }
     }
       
@@ -155,6 +176,7 @@ function renderMonsterList(monsters) {
     const releaseButton = document.createElement('button');
     releaseButton.textContent = 'Release';
     releaseButton.onclick = () => {
+      isBusy = true;
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
           type: 'releaseMonster',
@@ -189,6 +211,9 @@ function createGrid() {
 }
 
 function handleArrowPress(event) {
+  logBusy("Before handleArrowPress");
+  if (isBusy) return;
+
   let moved = false;
   if (event.key === 'ArrowUp' && playerY > 0) {
     playerY--;
@@ -206,6 +231,8 @@ function handleArrowPress(event) {
 
   if (moved) {
     createGrid();
+    isBusy = true;
+    logBusy("After setting isBusy true in handleArrowPress");
     move();
   }
 }
