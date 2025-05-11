@@ -41,8 +41,7 @@ contract MonsterNFT is ERC721, Ownable {
     }
 
     function updateHP(uint256 tokenId, uint256 newHP) external onlyOwner {
-        Monster storage monster = s_monsters[tokenId];
-        monster.currentHP = newHP;
+        s_monsters[tokenId].currentHP = newHP;
         emit HPUpdated(tokenId, newHP);
     }
 

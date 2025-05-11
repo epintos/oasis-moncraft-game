@@ -27,7 +27,14 @@ ws.onmessage = (event) => {
       sessionCode = data.sessionCode;
       playerStep = 0;
       document.getElementById("sessionCode").value = sessionCode;
-      isBusy = false;
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(
+          JSON.stringify({
+            type: "loadGame",
+            sessionCode,
+          })
+        );
+      }
     }
 
     if (data.type === "loadGameResult" && data.success) {
@@ -101,6 +108,17 @@ ws.onmessage = (event) => {
     if (data.type === 'joinFightResult') {
       if (data.success) {
         isBusy = true;
+        
+        if (data.status === "2") {
+          if (data.won) {
+            alert("🎉 You won the fight!");
+          } else {
+            alert("You lost the fight.");
+          } 
+        } else {
+          alert("You joined the fight.");
+        }
+    
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({
             type: 'loadGame',
@@ -228,39 +246,48 @@ function renderMonsterList(monsters) {
     return;
   }
 
-  monsters.forEach((id) => {
+  monsters.forEach((monster) => {
     const li = document.createElement("li");
-    li.textContent = `Monster #${id} `;
+
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = `#${monster.tokenId} - ${monster.name} `;
+
+    const img = document.createElement("img");
+    img.src = `https://ipfs.io/ipfs/${monster.uri.replace("ipfs://", "")}`;
+    img.alt = monster.name;
+    img.style.width = "80px";
+    img.style.marginRight = "10px";
 
     const releaseButton = document.createElement("button");
     releaseButton.textContent = "Release";
     releaseButton.onclick = () => {
       isBusy = true;
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(
-          JSON.stringify({
-            type: "releaseMonster",
-            sessionCode,
-            tokenId: parseInt(id),
-          })
-        );
+        ws.send(JSON.stringify({
+          type: "releaseMonster",
+          sessionCode,
+          tokenId: parseInt(monster.tokenId),
+        }));
       }
     };
 
-    const joinButton = document.createElement('button');
-    joinButton.textContent = 'Join Fight';
+    const joinButton = document.createElement("button");
+    joinButton.textContent = "Join Fight";
     joinButton.onclick = () => {
-      const fightId = prompt('Enter fight ID to join:');
+      const fightId = prompt("Enter fight ID to join:");
       if (fightId) {
-        joinSelectedMonsterToFight(fightId, id);
+        joinSelectedMonsterToFight(fightId, monster.tokenId);
       }
     };
-        
+
+    li.appendChild(img);
+    li.appendChild(nameSpan);
     li.appendChild(releaseButton);
     li.appendChild(joinButton);
     list.appendChild(li);
   });
 }
+
 
 const gridSize = 11;
 let playerX = 5;

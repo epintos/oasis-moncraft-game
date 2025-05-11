@@ -127,7 +127,18 @@ async function getSession(sessionCode) {
     const currentStep = result[1];
     const monstersTokenIds = result[2].map(m => m.toString());
     const sessionId = result[3].toString();
-
+    
+    const monstersMap = await Promise.all(
+      monstersTokenIds.map(async (m) => {
+        const monster = await monsterNFT.s_monsters(m.toString());
+        return {
+          uri: monster[1],
+          name: monster[0],
+          tokenId: m.toString(),
+        };
+      })
+    );
+    
     if (status.toString() !== "1") throw new Error('Session is not in progress');
 
     return {
@@ -135,7 +146,7 @@ async function getSession(sessionCode) {
       sessionCode,
       currentStep: Number(currentStep),
       sessionId: sessionId.toString(),
-      monsters: monstersTokenIds.map((m) => m.toString()),
+      monsters: monstersMap,
       message: `Loaded session ${sessionCode}`,
     };
   } catch (error) {
@@ -238,6 +249,7 @@ async function releaseMonster(session, tokenId) {
 
 async function joinFight(fightId, sessionCode, tokenId, sessionId) {
   try {
+    console.log(`Joining fight ${fightId} with tokenId ${tokenId} and sessionCode ${sessionCode}`);
     const tx = await monCraft.joinFight(fightId, sessionCode, tokenId, accessCode);
     const receipt = await tx.wait();
     const event = await waitForEvent("PlayerJoinedFight", sessionId);
@@ -250,14 +262,14 @@ async function joinFight(fightId, sessionCode, tokenId, sessionId) {
       sessionCodeTwo,
     ] = await monCraft.getFightInformation(fightId, accessCode);
 
+    let winner, winnerHPLeft;
+    
     if (status.toString() === "2") { // FightStatus.READY
       const monster1 = await monsterNFT.s_monsters(monsterOneTokenId);
       const monster2 = await monsterNFT.s_monsters(monsterTwoTokenId);
 
       let currentHp1 = monster1.currentHP;
       let currentHp2 = monster2.currentHP;
-
-      let winner, winnerHPLeft;
 
       while (currentHp1 > 0 && currentHp2 > 0) {
         const [damage1, damage2] = await monCraft.getFightDamage(fightId, accessCode);
@@ -288,6 +300,8 @@ async function joinFight(fightId, sessionCode, tokenId, sessionId) {
       sessionId: event.sessionId,
       fightId: fightId,
       player: event.playerNumber,
+      won: winner == sessionCode,
+      status: status.toString(),
       message: `Joined fight with monster ${tokenId}`,
     };
   } catch (error) {
