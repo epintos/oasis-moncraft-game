@@ -6,9 +6,14 @@ const path = require('path');
 const monCraftAbiPath = path.join(__dirname, 'abis/MonCraft.json');
 const monCraftAbi = JSON.parse(fs.readFileSync(monCraftAbiPath, 'utf8'));
 
+const monsterNFTAbiPath = path.join(__dirname, 'abis/MonCraft.json');
+const monsterNFTAbi = JSON.parse(fs.readFileSync(monsterNFTAbiPath, 'utf8'));
+
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+
 const monCraft = new ethers.Contract(process.env.CONTRACT_ADDRESS, monCraftAbi, wallet);
+const monsterNFT = new ethers.Contract(process.env.NFT_CONTRACT_ADDRESS, monsterNFTAbi, wallet);
 
 const accessCode = process.env.ROFL_ACCESS_CODE;
 
@@ -16,6 +21,7 @@ const eventBuffers = {
   MonsterCaptured: [],
   StepsSynced: [],
   MonsterReleased: [],
+  PlayerJoinedFight: [],
 };
 
 monCraft.on('MonsterCaptured', (sessionId, tokenId, captured, event) => {
@@ -39,6 +45,14 @@ monCraft.on('MonsterReleased', (sessionId, tokenId, event) => {
     sessionId: sessionId.toString(),
     tokenId,
     event,
+  });
+});
+
+monCraft.on('PlayerJoinedFight', (fightId, sessionId, player) => {
+  eventBuffers.PlayerJoinedFight.push({
+    fightId: fightId.toString(),
+    sessionId: sessionId.toString(),
+    player: player.toString(),
   });
 });
 
@@ -74,7 +88,12 @@ function waitForEvent(eventType, sessionId, timeout = 30000) {
 async function startGame() {
   try {
     const tx = await monCraft.startGame(accessCode);
+    
+    console.log('Transaction sent:', tx.hash);
+    
     const receipt = await tx.wait();
+
+    console.log('Transaction receipt:', receipt);
 
     let sessionId = null;
     for (const log of receipt.logs) {
@@ -199,7 +218,6 @@ async function captureMonster(session, monsterIndex, currentStep) {
   }
 }
 
-
 async function releaseMonster(session, tokenId) {
   const { sessionCode, sessionId } = session;
 
@@ -223,11 +241,75 @@ async function releaseMonster(session, tokenId) {
   }
 }
 
+async function joinFight(fightId, sessionCode, tokenId) {
+  try {
+    const tx = await monCraft.joinFight(fightId, sessionCode, tokenId, accessCode);
+    const receipt = await tx.wait();
+
+    const event = await waitForEvent("PlayerJoinedFight", sessionCode);
+
+    const [
+      monsterOneTokenId,
+      monsterTwoTokenId,
+      status,
+      sessionCodeOne,
+      sessionCodeTwo,
+    ] = await monCraft.getFightInformation(fightId, accessCode);
+
+    if (status.toString() === "2") { // FightStatus.READY
+      const monster1 = await monsterNFT.s_monsters(monsterOneTokenId);
+      const monster2 = await monsterNFT.s_monsters(monsterTwoTokenId);
+
+      let currentHp1 = monster1.currentHP;
+      let currentHp2 = monster2.currentHP;
+
+      let winner, winnerHPLeft;
+
+      while (currentHp1 > 0 && currentHp2 > 0) {
+        const [damage1, damage2] = await monCraft.getFightDamage(fightId, accessCode);
+
+        currentHp1 -= damage2;
+        currentHp2 -= damage1;
+
+        if (currentHp1 < 0) currentHp1 = 0;
+        if (currentHp2 < 0) currentHp2 = 0;
+      }
+
+      if (currentHp1 > 0) {
+        winner = sessionCodeOne;
+        winnerHPLeft = currentHp1;
+      } else {
+        winner = sessionCodeTwo;
+        winnerHPLeft = currentHp2;
+      }
+
+      const syncTx = await monCraft.syncFight(fightId, winner, winnerHPLeft, accessCode);
+      await syncTx.wait();
+    }
+
+    return {
+      success: true,
+      transactionHash: receipt.hash,
+      sessionId: event.sessionId,
+      fightId: fightId,
+      player: event.playerNumber,
+      message: `Joined fight with monster ${tokenId}`,
+    };
+  } catch (error) {
+    console.error('Join fight failed:', error);
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+}
+
 module.exports = {
   startGame,
   checkStep,
   getSession,
   saveGame,
   captureMonster,
-  releaseMonster
+  releaseMonster,
+  joinFight
 };

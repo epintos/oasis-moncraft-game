@@ -549,10 +549,10 @@ contract MonCraft is IERC721Receiver, Ownable {
         external
         view
         onlyROFL(accessCode)
-        returns (uint256 monsterOneTokenId, uint256 monsterTwoTokenId, FightStatus status)
+        returns (uint256 monsterOneTokenId, uint256 monsterTwoTokenId, FightStatus status, bytes32 sessionCodeOne, bytes32 sessionCodeTwo)
     {
         Fight storage fight = s_fights[fightId];
-        return (fight.monsterOneTokenId, fight.monsterTwoTokenId, fight.status);
+        return (fight.monsterOneTokenId, fight.monsterTwoTokenId, fight.status, fight.sessionCodeOne, fight.sessionCodeTwo);
     }
 
     /**

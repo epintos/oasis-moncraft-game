@@ -9,6 +9,7 @@ const {
   saveGame,
   captureMonster,
   releaseMonster,
+  joinFight,
 } = require('./blockchain');
 
 const app = express();
@@ -83,6 +84,15 @@ ws.on('connection', (ws) => {
         if (result.success) ws.session.playerStep++;
         response = { type: 'checkStepResult', ...result };
   
+      } else if (data.type === 'joinFight') {
+        const sessionCode = data.sessionCode ?? ws.session.sessionCode;
+        const sessionId = data.sessionId ?? ws.session.sessionId;
+        const tokenId = data.tokenId;
+        if (!sessionCode || !tokenId || typeof fightId === 'undefined') throw new Error("Missing joinFight data");
+      
+        const result = await joinFight(data.fightId, sessionCode, tokenId);
+        response = { type: 'joinFightResult', ...result };
+        
       } else {
         response = { type: 'error', message: 'Unknown or invalid message type' };
       }

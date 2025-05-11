@@ -97,6 +97,22 @@ ws.onmessage = (event) => {
         isBusy = false;
       }
     }
+
+    if (data.type === 'joinFightResult') {
+      if (data.success) {
+        isBusy = true;
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'loadGame',
+            sessionCode
+          }));
+        }
+      } else {
+        isBusy = false;
+        alert("Failed to join fight: " + data.message);
+      }
+    }    
+      
   } catch (error) {
     document.getElementById("output").textContent = "Error parsing response";
   }
@@ -182,6 +198,27 @@ function saveGame() {
   }
 }
 
+function joinSelectedMonsterToFight(fightId, tokenId) {
+  if (!sessionCode) {
+    document.getElementById('output').textContent = 'No session active';
+    return;
+  }
+
+  isBusy = true;
+  logBusy("Sending joinFight request");
+
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: 'joinFight',
+      fightId: parseInt(fightId),
+      sessionCode,
+      tokenId: parseInt(tokenId),
+    }));
+  } else {
+    document.getElementById('output').textContent = 'WebSocket is not connected';
+  }
+}
+
 function renderMonsterList(monsters) {
   const list = document.getElementById("monsterList");
   list.innerHTML = "";
@@ -210,7 +247,17 @@ function renderMonsterList(monsters) {
       }
     };
 
+    const joinButton = document.createElement('button');
+    joinButton.textContent = 'Join Fight';
+    joinButton.onclick = () => {
+      const fightId = prompt('Enter fight ID to join:');
+      if (fightId) {
+        joinSelectedMonsterToFight(fightId, id);
+      }
+    };
+        
     li.appendChild(releaseButton);
+    li.appendChild(joinButton);
     list.appendChild(li);
   });
 }
