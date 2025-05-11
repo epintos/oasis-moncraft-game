@@ -301,16 +301,26 @@ const gridSize = 11;
 let playerX = 5;
 let playerY = 5;
 
+const terrainTypes = ["tree", "grass", "dirt"];
+let terrainMap = Array.from({ length: gridSize }, () =>
+  Array.from({ length: gridSize }, () => terrainTypes[Math.floor(Math.random() * terrainTypes.length)])
+);
+
 function createGrid() {
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
+
   for (let y = 0; y < gridSize; y++) {
     for (let x = 0; x < gridSize; x++) {
       const cell = document.createElement("div");
-      cell.classList.add("cell");
+      const terrain = terrainMap[y][x];
+
+      cell.classList.add("cell", terrain);
+
       if (x === playerX && y === playerY) {
         cell.classList.add("player");
       }
+
       grid.appendChild(cell);
     }
   }

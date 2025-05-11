@@ -214,3 +214,23 @@ pre#output {
   gap: 10px;
   margin-top: 6px;
 }
+
+.cell.tree {
+  background-image: url('./images/tree.png');
+  background-size: cover;
+}
+
+.cell.grass {
+  background-image: url('./images/grass.png');
+  background-size: cover;
+}
+
+.cell.dirt {
+  background-image: url('./images/dirt.jpg');
+  background-size: cover;
+}
+
+.cell.player {
+  background-image: url('./images/player.png');
+  background-size: cover;
+}
