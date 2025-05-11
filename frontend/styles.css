@@ -1,44 +1,160 @@
 body {
-    font-family: Arial, sans-serif;
-    max-width: 600px;
-    margin: 20px auto;
-    padding: 0 20px;
-  }
-  
-  h1 {
-    text-align: center;
-  }
-  
-  div {
-    margin: 10px 0;
-  }
-  
-  label {
-    display: inline-block;
-    width: 120px;
-  }
-  
-  input {
-    width: 300px;
-    padding: 5px;
-  }
-  
-  button {
-    margin: 10px;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #0056b3;
-  }
-  
-  pre#output {
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 5px;
-    min-height: 100px;
-  }
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.grid-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(11, 40px);
+  grid-template-rows: repeat(11, 40px);
+  gap: 4px;
+  margin: 0 auto 20px;
+}
+
+.cell {
+  width: 40px;
+  height: 40px;
+  background-color: #ddd;
+  border-radius: 2px;
+}
+
+.player {
+  background-color: #4caf50;
+}
+
+.game-image {
+  display: block;
+  margin: 0 auto 20px;
+  max-width: 200px;
+  height: auto;
+}
+
+.input-group {
+  margin: 15px 0;
+  text-align: center;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+  margin: 15px 0;
+  gap: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+input {
+  width: 300px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+label {
+  display: inline-block;
+  width: 120px;
+  text-align: right;
+  margin-right: 10px;
+}
+
+#monsterList {
+  list-style-type: none;
+  padding: 0;
+  text-align: center;
+  margin: 15px 0;
+}
+
+h3 {
+  text-align: center;
+  margin: 20px 0 10px;
+  color: #333;
+}
+
+.debug-header {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  justify-content: center;
+  width: 100%;
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.debug-header h3 {
+  margin: 0;
+  color: #666;
+}
+
+.toggle-arrow {
+  margin-right: 8px;
+  transition: transform 0.2s;
+  font-size: 12px;
+}
+
+.debug-content {
+  display: none;
+  background-color: #f8f9fa;
+  padding: 8px 8px;
+  border-radius: 4px;
+  margin-top: 5px;
+  width: 100%;
+  border: 1px solid #eee;
+}
+
+.debug-content.show {
+  display: block;
+}
+
+.arrow-right {
+  transform: rotate(0deg);
+}
+
+.arrow-down {
+  transform: rotate(90deg);
+}
+
+pre#output {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}

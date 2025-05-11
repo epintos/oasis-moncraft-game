@@ -1,6 +1,6 @@
 # Oasis MonCraft
 
-<img src="./images/logo.webp" alt="Logo" width="200"/>
+<img src="./images/frontend/logo.webp" alt="Logo" width="200"/>
 
 ## Introduction
 

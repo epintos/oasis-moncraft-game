@@ -4,49 +4,50 @@
   <meta charset="UTF-8">
   <title>MonCraft Game Client</title>
   <link rel="stylesheet" href="styles.css">
-  <style>
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(11, 40px);
-      grid-template-rows: repeat(11, 40px);
-      gap: 4px;
-      margin-bottom: 20px;
-    }
-    .cell {
-      width: 40px;
-      height: 40px;
-      background-color: #ddd;
-    }
-    .player {
-      background-color: #4caf50;
-    }
-  </style>
 </head>
 <body>
-  <h1>MonCraft Game Client</h1>
-  <div>
-    <label for="toAddress">Recipient Address:</label>
-    <input type="text" id="toAddress" placeholder="0x..." />
+  <div class="container">
+    <!-- Image at the top -->
+    <img src="./images/logo.webp" alt="Game Image" class="game-image">
+    
+    <div class="input-group">
+      <label for="sessionCode">Session Code:</label>
+      <input type="text" id="sessionCode" placeholder="Enter session code" value="0x..." />
+    </div>
+    
+    <div class="button-group">
+      <button onclick="startSession()">Start Game</button>
+      <button onclick="loadGame()">Load Game</button>
+      <button onclick="saveGame()">Save Game</button>
+    </div>
+    
+    <h3>Game Grid</h3>
+    <div class="grid-container">
+      <div id="grid" class="grid"></div>
+    </div>
+    
+    <h3>Captured Monsters</h3>
+    <ul id="monsterList"></ul>
+    
+    <!-- Debug Section -->
+    <div class="debug-header" onclick="toggleDebug()">
+      <span class="toggle-arrow arrow-right">▶</span>
+      <h3>Debug Console</h3>
+    </div>
+    <div id="debugContent" class="debug-content">
+      <pre id="output">Connecting...</pre>
+    </div>
   </div>
-  <div>
-    <label for="amount">Amount (ETH):</label>
-    <input type="text" id="amount" placeholder="0.01" />
-  </div>
-  <button onclick="sendTransaction()">Send Transaction</button>
-  <div>
-    <label for="sessionCode">Session Code:</label>
-    <input type="text" id="sessionCode" placeholder="Enter session code" value="0x80718eff04895cfd92bc2827908e161db6ed66dc1dafc822641b303cde360be8" />
-  </div>
-  <button onclick="startSession()">Start Game</button>
-  <button onclick="loadGame()">Load Game</button>
-  <button onclick="saveGame()">Save Game</button>
-  <button onclick="move()">Move</button>
-  <h3>Game Grid</h3>
-  <div id="grid" class="grid"></div>
-  <h3>Captured Monsters</h3>
-  <ul id="monsterList"></ul>
-  <h3>Response:</h3>
-  <pre id="output">Connecting...</pre>
+  
   <script src="app.js"></script>
+  <script>
+    function toggleDebug() {
+      const debugContent = document.getElementById('debugContent');
+      const arrow = document.querySelector('.toggle-arrow');
+      debugContent.classList.toggle('show');
+      arrow.classList.toggle('arrow-right');
+      arrow.classList.toggle('arrow-down');
+    }
+  </script>
 </body>
 </html>
