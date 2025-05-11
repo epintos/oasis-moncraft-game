@@ -137,24 +137,31 @@
           const input = document.getElementById('modal-input');
           const okBtn = document.getElementById('modal-ok');
           const cancelBtn = document.getElementById('modal-cancel');
-      
+
+          // Reset all modal elements
           msg.textContent = message;
           input.value = '';
-          input.classList.toggle('hidden', !options.input);
-          cancelBtn.classList.toggle('hidden', !options.confirm);
-      
+          input.style.display = options.input ? 'block' : 'none';
+          cancelBtn.style.display = options.confirm ? 'inline-block' : 'none';
+
           modal.classList.remove('hidden');
-      
-          okBtn.onclick = () => {
+
+          const cleanup = () => {
             modal.classList.add('hidden');
+            okBtn.onclick = null;
+            cancelBtn.onclick = null;
+          };
+
+          okBtn.onclick = () => {
+            cleanup();
             resolve(options.input ? input.value : true);
           };
-      
+
           cancelBtn.onclick = () => {
-            modal.classList.add('hidden');
+            cleanup();
             resolve(false);
           };
-      
+
           if (options.input) input.focus();
         });
       }
