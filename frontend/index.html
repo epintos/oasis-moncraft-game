@@ -10,6 +10,12 @@
     <!-- Image at the top -->
     <img src="./images/logo.webp" alt="Game Image" class="game-image">
     
+    <!-- Welcome Message -->
+    <div class="welcome-message">
+      <h2>Welcome to MonCraft!</h2>
+      <p>Start your monster-catching adventure by entering a session code below or creating a new game.</p>
+    </div>
+    
     <div class="input-group">
       <label for="sessionCode">Session Code:</label>
       <input type="text" id="sessionCode" placeholder="Enter session code" value="0x..." />
@@ -21,7 +27,6 @@
       <button onclick="saveGame()">Save Game</button>
     </div>
     
-    <h3>Game Grid</h3>
     <div class="grid-container">
       <div id="grid" class="grid"></div>
     </div>

@@ -158,3 +158,20 @@ pre#output {
   font-size: 13px;
   line-height: 1.4;
 }
+
+.welcome-message {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 0 20px;
+}
+
+.welcome-message h2 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.welcome-message p {
+  color: #7f8c8d;
+  line-height: 1.5;
+  margin: 0;
+}
