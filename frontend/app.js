@@ -248,15 +248,21 @@ function renderMonsterList(monsters) {
 
   monsters.forEach((monster) => {
     const li = document.createElement("li");
-
-    const nameSpan = document.createElement("span");
-    nameSpan.textContent = `#${monster.tokenId} - ${monster.name} `;
+    li.className = "monster-entry";
 
     const img = document.createElement("img");
     img.src = `https://ipfs.io/ipfs/${monster.uri.replace("ipfs://", "")}`;
     img.alt = monster.name;
-    img.style.width = "80px";
-    img.style.marginRight = "10px";
+
+    const info = document.createElement("div");
+    info.className = "monster-info";
+
+    const name = document.createElement("div");
+    name.className = "monster-name";
+    name.textContent = `#${monster.tokenId} - ${monster.name}`;
+
+    const actions = document.createElement("div");
+    actions.className = "monster-actions";
 
     const releaseButton = document.createElement("button");
     releaseButton.textContent = "Release";
@@ -280,14 +286,16 @@ function renderMonsterList(monsters) {
       }
     };
 
+    actions.appendChild(releaseButton);
+    actions.appendChild(joinButton);
+    info.appendChild(name);
+    info.appendChild(actions);
+
     li.appendChild(img);
-    li.appendChild(nameSpan);
-    li.appendChild(releaseButton);
-    li.appendChild(joinButton);
+    li.appendChild(info);
     list.appendChild(li);
   });
 }
-
 
 const gridSize = 11;
 let playerX = 5;
