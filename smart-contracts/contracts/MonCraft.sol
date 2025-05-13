@@ -548,10 +548,26 @@ contract MonCraft is IERC721Receiver, Ownable {
     {
         Session storage session = s_codeSessions[sessionCode];
 
-        // Copy from storage to memory
         uint256[] memory tokens = session.monstersTokenIds;
+        uint256 activeTokenLength;
 
-        return (uint256(session.status), session.currentStep, tokens, session.id);
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (session.monsterTokenIdsExists[tokens[i]]) {
+                activeTokenLength++;
+            }
+        }
+
+        uint256[] memory activeTokens = new uint256[](activeTokenLength);
+
+        uint256 index = 0;
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (session.monsterTokenIdsExists[tokens[i]]) {
+                activeTokens[index] = tokens[i];
+                index++;
+            }
+        }
+
+        return (uint256(session.status), session.currentStep, activeTokens, session.id);
     }
 
     /**

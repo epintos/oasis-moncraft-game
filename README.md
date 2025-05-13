@@ -4,7 +4,18 @@
 
 ## Introduction
 
-**Oasis MonCraft** is a project built for the 2025 ETHDam Hackathon. It’s a retro-inspired, top-down RPG where players explore a grid-based world, encounter wild Monsters, and attempt to catch them — blending on-chain privacy with real-time gameplay.
+**Oasis MonCraft** is a project built for the 2025 ETHDam 48-hours Hackathon. It’s a retro-inspired, top-down RPG where players explore a grid-based world, encounter wild Monsters, and attempt to catch them — blending on-chain privacy with real-time gameplay.
+
+Contributors: Developed by [@epintos](https://github.com/epintos) and [@federava](https://github.com/federava).
+
+With this project we won the following Oasis track bounties:
+- 🥉 ROFL Track Champions
+- 🥉 Sapphire Track Heroes
+- ⭐ Developer Feedback
+
+Sapphire Tesnet contracts:
+- MonCraft: [0x76104ABa95359C2694627092E58DA7b1292f80aC](https://explorer.oasis.io/testnet/sapphire/address/0x76104ABa95359C2694627092E58DA7b1292f80aC)
+- MonsterNFT: [0x8f12Fd03C54fd439C18A0430567b44A9945217a9](https://explorer.oasis.io/testnet/sapphire/address/0x8f12Fd03C54fd439C18A0430567b44A9945217a9)
 
 ## Implementation
 
@@ -88,20 +99,3 @@ The following compile and deploy to the different networks:
 ```bash
   pnpm generate-abi
 ```
-
-### UI Deploy
-
-Install Vercel:
-```bash
-  npm install -g vercel
-```
-
-Deploy site:
-```bash
-  vercel
-```
-
-
-### Contributors
-
-Developed by [@epintos](https://github.com/epintos) and [@federava](https://github.com/federava).

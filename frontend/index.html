@@ -3,30 +3,79 @@
   <head>
     <meta charset="UTF-8" />
     <title>MonCraft</title>
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="icon" href="./images/favicon.ico" type="image/x-icon" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="./images/favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="./images/favicon-16x16.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="./images/apple-touch-icon.png"
-    />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" href="/images/favicon.ico" type="image/x-icon" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+    <style>
+      .modal {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+      }
+
+      .modal.hidden {
+        display: none;
+      }
+
+      .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        width: 300px;
+      }
+
+      .modal-buttons {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      #modal-input {
+        margin-top: 10px;
+        padding: 5px;
+        width: 90%;
+      }
+
+      /* Spinner styles */
+      .spinner {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        z-index: 1000;
+      }
+      @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+      .spinner.show {
+        display: block;
+      }
+    </style>
   </head>
   <body>
     <div class="container">
+      <!-- Spinner -->
+      <div id="spinner" class="spinner"></div>
+
       <!-- Image at the top -->
-      <img src="./images/logo.webp" alt="Game Image" class="game-image" />
+      <img src="/images/logo.webp" alt="Game Image" class="game-image" />
 
       <!-- Welcome Message -->
       <div class="welcome-message">
@@ -66,11 +115,11 @@
         <h3>Debug Console</h3>
       </div>
       <div id="debugContent" class="debug-content">
-        <pre id="output">Connecting...</pre>
+        <pre id="output">Ready</pre>
       </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="/app.js"></script>
     <script>
       function toggleDebug() {
         const debugContent = document.getElementById("debugContent");
@@ -80,5 +129,52 @@
         arrow.classList.toggle("arrow-down");
       }
     </script>
+    <script>
+      function showModal(message, options = {}) {
+        return new Promise((resolve) => {
+          const modal = document.getElementById('modal');
+          const msg = document.getElementById('modal-message');
+          const input = document.getElementById('modal-input');
+          const okBtn = document.getElementById('modal-ok');
+          const cancelBtn = document.getElementById('modal-cancel');
+
+          // Reset all modal elements
+          msg.textContent = message;
+          input.value = '';
+          input.style.display = options.input ? 'block' : 'none';
+          cancelBtn.style.display = options.confirm ? 'inline-block' : 'none';
+
+          modal.classList.remove('hidden');
+
+          const cleanup = () => {
+            modal.classList.add('hidden');
+            okBtn.onclick = null;
+            cancelBtn.onclick = null;
+          };
+
+          okBtn.onclick = () => {
+            cleanup();
+            resolve(options.input ? input.value : true);
+          };
+
+          cancelBtn.onclick = () => {
+            cleanup();
+            resolve(false);
+          };
+
+          if (options.input) input.focus();
+        });
+      }
+    </script>
+    <div id="modal" class="modal hidden">
+      <div class="modal-content">
+        <p id="modal-message"></p>
+        <input id="modal-input" class="hidden" />
+        <div class="modal-buttons">
+          <button id="modal-ok">OK</button>
+          <button id="modal-cancel" class="hidden">Cancel</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
